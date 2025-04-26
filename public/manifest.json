@@ -1,0 +1,16 @@
+{
+    "name": "العاب مجانية",
+    "short_name": "العاب",
+    "description": "تطبيق العاب مجانية",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#ffffff",
+    "iocns": [
+        {
+            "src": "./icon.png",
+            "size": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
