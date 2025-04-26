@@ -12,8 +12,8 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
-        <link rel="manifest" href="../public/manifest.json" />
-        <link rel="icon" href="../public/icon.png" />
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="icon" href="/icon.png" />
         <meta name="theme-color" content="#ffffff" />
       </head>
       <body className={inter.className}>{children}</body>
