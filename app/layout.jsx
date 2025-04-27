@@ -13,7 +13,7 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <link rel="icon" href="/icon.png" />
+        <link rel="icon" href="/icon192.png" />
         <meta name="theme-color" content="#ffffff" />
       </head>
       <body className={inter.className}>{children}</body>
