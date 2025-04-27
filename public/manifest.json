@@ -8,12 +8,12 @@
     "theme_color": "#ffffff",
     "iocns": [
         {
-            "src": "/icon512",
+            "src": "/icon512.png",
             "size": "512x512",
             "type": "image/png"
         },
         {
-            "src": "/icon192",
+            "src": "/icon192.png",
             "size": "192x192",
             "type": "image/png"
         }
