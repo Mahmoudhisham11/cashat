@@ -6,6 +6,8 @@
 }
 :root {
   --main-color: #0067ff;
+  --black-color: #1d1d1d;
+  --second-color: #4e55e0;
 }
 .inputContainer {
   width: 80%;
