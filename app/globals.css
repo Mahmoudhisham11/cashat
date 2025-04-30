@@ -7,3 +7,24 @@
 :root {
   --main-color: #0067ff;
 }
+.inputContainer {
+  width: 80%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 10px;
+}
+.inputContainer label {
+  width: 100%;
+  color: black;
+  font-size: 20px;
+}
+.inputContainer input {
+  width: 100%;
+  padding: 7px;
+  border: 1px solid black;
+  outline: none;
+  font-size: 20px;
+  border-radius: 8px;
+}

@@ -1,7 +1,7 @@
 {
-    "name": "العاب مجانية",
-    "short_name": "العاب",
-    "description": "تطبيق العاب مجانية",
+    "name": "BetterMe",
+    "short_name": "BetterMe",
+    "description": "habit tracker game",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#ffffff",
