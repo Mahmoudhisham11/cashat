@@ -5,12 +5,15 @@
   font-family: Arial, Helvetica, sans-serif;
 }
 :root {
-  --main-color: #0067ff;
+  /* --main-color: #0067ff; */
+  /* --second-color: #4e55e0; */
+  --main-color: #d8fe74;
+  --second-color: #1f3da0;
   --black-color: #1d1d1d;
-  --second-color: #4e55e0;
 }
+
 .inputContainer {
-  width: 80%;
+  width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
