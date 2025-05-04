@@ -74,8 +74,16 @@ function Main() {
         return () => {unSubscribe(), unSubscribeClikcedDays()}
     },[userEmail])
 
-    const hanleDelete = async(id) => {
+    const hanleDelete = async(id, habitName) => {
         await deleteDoc(doc(db, 'habits', id))
+        const q = query(collection(db, 'completedHabits'), where('habitName', '==', habitName), where('email', '==', userEmail))
+        const querySnapShot = await getDocs(q)
+        if(!querySnapShot.empty) {
+            const completedHabitDoc = querySnapShot.docs[0]
+            const habitId = completedHabitDoc.id
+            const docRef = doc(db, 'completedHabits', habitId)
+            await deleteDoc(docRef)
+        }
     }
 
     const hableCompletedDays = async(dayNumber, habitName) => {
@@ -153,7 +161,7 @@ function Main() {
                         <div className={styles.cardHeader}>
                             <div className={styles.cardTitle}>
                                 <h2>
-                                    <span onClick={() => hanleDelete(habit.id)}><MdDelete/></span>
+                                    <span onClick={() => hanleDelete(habit.id, habit.name)}><MdDelete/></span>
                                     <span>{habit.name}</span>
                                 </h2>
                                 <strong>{habit.type}</strong>
