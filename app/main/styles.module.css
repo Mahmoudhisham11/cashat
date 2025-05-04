@@ -92,15 +92,16 @@
     color: rgba(172, 172, 172, 0.753);
 }
 .cardBody {
-    min-height: calc(100% - 40px);
+    width: 100%;
+    height: fit-content;
     display: flex;
     align-items: center;
     flex-wrap: wrap;
     gap: 10px;
-    padding-top: 30px;
+    padding: 30px 0;
 
 }
-.cardBody p {
+.cardBody button {
     width: 30px;
     height: 30px;
     color: white;
@@ -108,5 +109,5 @@
     padding: 5px;
     border-radius: 8px;
     text-align: center;
-    cursor: pointer;
+    background-color: transparent;
 }

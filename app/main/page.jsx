@@ -10,10 +10,11 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import { IoIosArrowDown } from "react-icons/io";
 import { MdDelete } from "react-icons/md";
+import { MdDone } from "react-icons/md";
 import Nav from "../components/Nav/page";
 import Add from "../components/Add/page";
 import { db } from "../firebase";
-import { collection, deleteDoc, onSnapshot, query, where, doc } from "firebase/firestore";
+import { collection, deleteDoc, onSnapshot, query, where, doc, getDocs, updateDoc, addDoc } from "firebase/firestore";
 
 function Main() {
     const [name, setName] = useState('')
@@ -22,8 +23,8 @@ function Main() {
     const [active, setActive] = useState(null)
     const [add, setAdd] = useState(false)
     const [habits, setHabits] = useState([])
+    const [completedDays, setCompletedDays] = useState([])
     const colors = ['#b8eb6c','#1f3da0', '#f7cd63', '#1b1b1b']
-    const test = ['1', '2', '3', '5','6','78']
 
     const today = new Date()
     const currentYear = today.getFullYear()
@@ -58,11 +59,48 @@ function Main() {
             })
             setHabits(habitsArrya)
         })
-        return () => unSubscribe()
+        const clickedDaysQ = query(collection(db, 'completedHabits'), where('email', '==', userEmail))
+        const unSubscribeClikcedDays = onSnapshot(clickedDaysQ, (querySnapShot) => {
+            if(!querySnapShot.empty) {
+                const habitsDays = {}
+                querySnapShot.forEach((doc) => {
+                    const data = doc.data()
+                    habitsDays[data.habitName] = data.clickedDays || []
+                })
+                setCompletedDays(habitsDays)
+            }
+        })
+        
+        return () => {unSubscribe(), unSubscribeClikcedDays()}
     },[userEmail])
 
     const hanleDelete = async(id) => {
         await deleteDoc(doc(db, 'habits', id))
+    }
+
+    const hableCompletedDays = async(dayNumber, habitName) => {
+        const q = query(collection(db, 'completedHabits'), where('habitName', '==', habitName), where('email', '==', userEmail))
+        const querySnapShot = await getDocs(q)
+        if(!querySnapShot.empty) {
+            const habitDoc = querySnapShot.docs[0]
+            const docRef = doc(db, 'completedHabits', habitDoc.id)
+            const data = habitDoc.data()
+            const currntClickedDays = data.clickedDays || []
+            if(currntClickedDays.includes(dayNumber)) return
+            const updatedDays = [...currntClickedDays, dayNumber]
+            const currentCount = habitDoc.data().clickCount || 1
+            await updateDoc(docRef, {
+                clickCount: currentCount + 1,
+                clickedDays: updatedDays
+            })
+        }else {
+            await addDoc(collection(db, 'completedHabits'), {
+                habitName: habitName,
+                clickedDays: [dayNumber],
+                clickCount: 1,
+                email: userEmail
+            })
+        }
     }
 
     return(
@@ -124,8 +162,23 @@ function Main() {
                         </div>
                         <div className={styles.cardBody}>
                             {days.map((day, index) => {
+                                const isPast = day.dayNumber < currentDay
+                                const isFuture = day.dayNumber > currentDay
+                                const isCompleted = (completedDays[habit.name] || []).includes(day.dayNumber)
                                 return(
-                                    <p key={index}>{day.dayNumber}</p>
+                                    <button key={index}
+                                    disabled={isPast || isFuture || isCompleted}
+                                    style={{
+                                        cursor: isCompleted || isPast || isFuture ? 'not-allowed' : 'pointer'
+                                    }}
+                                    onClick={() => hableCompletedDays(day.dayNumber, habit.name)}
+                                    >
+                                        {(completedDays[habit.name] || []).includes(day.dayNumber) ? 
+                                            <MdDone/>
+                                            :
+                                            <>{day.dayNumber}</>
+                                        }
+                                    </button>
                                 )
                             })}
                         </div>
