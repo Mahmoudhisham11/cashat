@@ -12,7 +12,6 @@ import { IoIosArrowDown } from "react-icons/io";
 import { MdDelete } from "react-icons/md";
 import { MdDone } from "react-icons/md";
 import Nav from "../components/Nav/page";
-import AddPage from "../components/AddPage/page"
 import { db } from "../firebase";
 import { collection, deleteDoc, onSnapshot, query, where, doc, getDocs, updateDoc, addDoc } from "firebase/firestore";
 
@@ -195,7 +194,6 @@ function Main() {
                 })}
                 
             </div>
-            <AddPage add={add} setAdd={setAdd}/>
             <Nav add={add} setAdd={setAdd}/>
         </div>
     )
