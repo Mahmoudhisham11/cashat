@@ -5,7 +5,7 @@ import { IoIosCloseCircle } from "react-icons/io";
 import { db } from "../../firebase";
 import { addDoc, collection } from "firebase/firestore";
 
-function Add({add, setAdd}) {
+function AddFunction({add, setAdd}) {
     const [form, setForm] = useState(false)
     const [name, setName] = useState('')
     const [description, setDescription] = useState('')
@@ -66,4 +66,4 @@ function Add({add, setAdd}) {
         </div>
     )
 }
-export default Add;
+export default AddFunction;
