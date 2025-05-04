@@ -11,7 +11,6 @@ import 'swiper/css/pagination';
 import { IoIosArrowDown } from "react-icons/io";
 import { MdDelete } from "react-icons/md";
 import { MdDone } from "react-icons/md";
-import Nav from "../components/Nav/page";
 import { db } from "../firebase";
 import { collection, deleteDoc, onSnapshot, query, where, doc, getDocs, updateDoc, addDoc } from "firebase/firestore";
 
@@ -20,7 +19,6 @@ function Main() {
     const [userEmail, setUserEmail] = useState('')
     const [coin, setCoin] = useState(0)
     const [active, setActive] = useState(null)
-    const [add, setAdd] = useState(false)
     const [habits, setHabits] = useState([])
     const [completedDays, setCompletedDays] = useState([])
     const colors = ['#b8eb6c','#1f3da0', '#f7cd63', '#1b1b1b']
@@ -194,7 +192,6 @@ function Main() {
                 })}
                 
             </div>
-            <Nav add={add} setAdd={setAdd}/>
         </div>
     )
 }
