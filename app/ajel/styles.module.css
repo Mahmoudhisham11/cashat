@@ -1,0 +1,98 @@
+.withdrawContainer {
+    width: 100%;
+    height: 100vh;
+    background-color: var(--main-color);
+}
+.container {
+    width: 100%;
+    height: 100vh;
+    background-color: white;
+    border-radius: 28px 28px 0 0;
+}
+.inputContainer {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-bottom: 30px;
+}
+.inputBox {
+    width: 80%;
+    height: 60px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: rgba(228, 228, 228, 0.603);
+    border-radius: 8px;
+    padding: 0 10px;
+}
+.inputBox p {
+    color: whitesmoke;
+    font-size: 18px;
+}
+.inputBox input {
+    width: 90%;
+    background-color: transparent;
+    border: none;
+    outline: none;
+    font-size: 18px;
+}
+.inputBox input::placeholder {
+    color: whitesmoke;
+}
+.containerTitle {
+    width: 100%;
+    padding: 20px 2%;
+}
+.content {
+    width: 100%;
+    padding: 20px 2%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 15px;
+}
+.card {
+    width: 90%;
+    height: 70px;
+    background-color: var(--gray-color);
+    border-radius: 8px;
+    padding: 10px 2%;
+    overflow: hidden;
+    transition: .3s;
+    cursor: pointer;
+}
+.card.active {
+    height: 280px;
+    background-color: var(--main-color);
+    color: white;
+}
+.card button {
+    width: 100%;
+    background-color: whitesmoke;
+    color: black;
+    font-size: 20px;
+    border: none;
+    border-radius: 28px;
+    padding: 5px;
+    margin-top: 10px;
+    cursor: pointer;
+}
+.cardHead {
+    width: 100%;
+    height: 60px;
+    display: flex;
+    justify-content: space-between;
+    align-content: center;
+}
+.cardBody {
+    display: flex;
+    justify-content: start;
+    align-items: start;
+    flex-direction: column;
+    gap: 15px;
+}
+.cardBody p {
+    font-size: 20px;
+}

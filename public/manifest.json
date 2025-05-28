@@ -1,6 +1,6 @@
 {
-    "name": "BetterMe",
-    "short_name": "BetterMe",
+    "name": "Cashat",
+    "short_name": "Cashat",
     "description": "habit tracker game",
     "start_url": "/",
     "display": "standalone",

@@ -1,43 +1,96 @@
 * {
-  padding: 0;
-  margin: 0;
-  box-sizing: border-box;
-  font-family: Arial;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+        font-family: "cairo";
 }
 :root {
-  /* --main-color: #0067ff; */
-  /* --second-color: #4e55e0; */
-  --main-color: #d8fe74;
-  --second-color: #1f3da0;
-  --black-color: #1d1d1d;
+    --main-color: #395fe4;
+    --gray-color: #e6e5e5;
+    --black-color: #1b1b1b;
 }
-
+body {
+    direction: rtl;
+}
+.main {
+    width: 100%;
+    height: 100vh;
+}
+.title {
+    position: relative;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.title h2 {
+    font-size: 50px;
+    color: white;
+    padding: 30px 0;
+}
+.titleLink {
+    position: absolute;
+    left: 20px;
+    font-size: 30px;
+    color: white;
+    text-decoration: none;
+}
 .inputContainer {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  gap: 10px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 15px;
 }
 .inputContainer label {
-  width: 100%;
-  color: black;
-  font-size: 20px;
+    width: 100%;
+    color: black;
 }
 .inputContainer input {
-  width: 100%;
-  padding: 7px;
-  border: 1px solid black;
-  outline: none;
-  font-size: 20px;
-  border-radius: 8px;
+    width: 100%;
+    border: 1px solid black;
+    outline: none;
+    border-radius: 28px;
+    padding: 7px;
 }
-.inputContainer select {
-  width: 100%;
-  padding: 7px;
-  border: 1px solid black;
-  font-size: 20px;
-  border-radius: 8px;
-  color: black;
+.shadowBox {
+    display: none;
+}
+.shadowBox.active {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.box {
+    position: relative;
+    width: 80%;
+    height: fit-content;
+    background-color: white;
+    border-radius: 8px;
+    padding: 15px;
+}
+.boxForm {
+    width: 100%;
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 10px;
+}
+
+@media(max-width: 767px) {
+    .title h2 {
+        font-size: 30px;
+    }
+    .titleLink {
+        font-size: 20px;
+    }
 }
