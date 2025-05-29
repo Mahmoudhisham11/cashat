@@ -1,17 +1,17 @@
 'use client';
 import { useEffect, useState } from "react";
 import styles from "./styles.module.css";
-import { HiBars3BottomLeft } from "react-icons/hi2";
 import { FaArrowUp } from "react-icons/fa";
 import { FaArrowDown } from "react-icons/fa";
 import { TbZoomMoneyFilled } from "react-icons/tb";
+import { IoReload } from "react-icons/io5";
 import SliderCards from "../SliderCards/page";
 import Nav from "../Nav/page";
 import Wallet from "../Wallet/page"
 import Cash from "../Cash/page"
 import AjelComp from "../AjelComp/page"
 import { db } from "../../app/firebase";
-import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { collection, deleteDoc, getDocs, onSnapshot, query, where, doc } from "firebase/firestore";
 
 function Main() {
     const [openWallet, setOpenWallet] = useState(false)
@@ -43,6 +43,16 @@ function Main() {
         return () => userSubscribe()
     }, [userName,userEmail])
 
+    const handleCloseDay = async() => {
+        const q = query(collection(db, 'operations'), where('userEmail', '==', userEmail))
+        const querySanpshot = await getDocs(q)
+        const deletePromises = querySanpshot.docs.map((docSnap) => 
+            deleteDoc(doc(db, 'operations', docSnap.id))
+        )
+        await Promise.all(deletePromises)
+        alert('تم تقفيل اليوم بنجاح')
+    }
+
     return(
         <div className={styles.main}>
             <Nav/>
@@ -54,7 +64,7 @@ function Main() {
                     <p>مرحبا بعودتك</p>
                     <h2>{userName}</h2>
                 </div>
-                <button><HiBars3BottomLeft/></button>
+                <button onClick={handleCloseDay}><IoReload/></button>
             </div>
             <div className={styles.container}>
                 <div className={styles.cardContainer}>

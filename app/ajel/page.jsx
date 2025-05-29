@@ -14,6 +14,7 @@ function Ajel() {
     const [total, setTotal] = useState(0)
     const [userEmail, setUserEmail] = useState('')
     const [ajelArray, setAjelArray] = useState([])
+    const [usersNames, setUsersNames] = useState([])
 
         useEffect(() => {
         if (typeof window !== "undefined") {
@@ -30,10 +31,17 @@ function Ajel() {
         }
         const unSubscribe = onSnapshot(q, (querySnapshot) => {
             const snapArray = []
+            const userArray = []
             querySnapshot.forEach((doc) => {
                 snapArray.push({...doc.data(), id: doc.id})
+                const data = doc.data()
+                if(data.userName) {
+                    userArray.push(data.userName)
+                }
             })
             setAjelArray(snapArray)
+            const uniqueUsers = [...new Set(userArray)]
+            setUsersNames(uniqueUsers)
         })
         const subTotal = ajelArray.reduce((acc, ajel) => {
             return acc + Number(ajel.ajelVal)
@@ -42,7 +50,7 @@ function Ajel() {
         return () => unSubscribe()
     }, [userEmail,search,ajelArray])
 
-    const handleAjel = async(id, phone, val, profit) => {
+    const handleAjel = async(id, phone, profit, val) => {
         // ADD THE OPERATION TO WITHDRAW OPERATIONS
         const operationsCollection = collection(db, 'operations')
         await addDoc(operationsCollection, {
@@ -78,9 +86,9 @@ function Ajel() {
                     <div className={styles.inputBox}>
                         <input list="userName" placeholder="ابحث عن اسم العميل" onChange={(e) => setSearch(e.target.value)} />
                         <datalist id="userName">
-                            {ajelArray.map(ajel => {
+                            {usersNames.map((userName, index) => {
                                 return (
-                                    <option key={ajel.id} value={ajel.userName}/>
+                                    <option key={index} value={userName}/>
                                 )
                             })}
                         </datalist>

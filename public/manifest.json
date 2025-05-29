@@ -1,7 +1,7 @@
 {
     "name": "Cashat",
     "short_name": "Cashat",
-    "description": "habit tracker game",
+    "description": "Cashat is tracking your money and give you reports",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#ffffff",

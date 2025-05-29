@@ -12,6 +12,7 @@ function Withdraw() {
     const [active, setActive] = useState('')
     const [search, setSearch] = useState('')
     const [withdrawArray, setWithdrawArray] = useState([])
+    const [phoneNumbers, setPhoneNumbers] = useState([])
     const [userEmail, setUserEmail] = useState('')
     const [total, setTotal] = useState(0)
 
@@ -31,10 +32,17 @@ function Withdraw() {
         }
         const unSubscribe = onSnapshot(q, (querySnapshot) => {
             const snapArray = []
+            const numbersArray = []
             querySnapshot.forEach((doc) => {
                 snapArray.push({...doc.data(), id: doc.id})
+                const data = doc.data()
+                if(data.phone) {
+                    numbersArray.push(data.phone)
+                }
             })
             setWithdrawArray(snapArray)
+            const uniqueNumbers = [...new Set(numbersArray)]
+            setPhoneNumbers(uniqueNumbers)
         })
         const subTotal = withdrawArray.reduce((acc, withdraw) => {
             return acc + Number(withdraw.operationVal)
@@ -55,9 +63,9 @@ function Withdraw() {
                     <div className={styles.inputBox}>
                         <input list="numbers" placeholder="ابحث عن رقم الشريحة" onChange={(e) => setSearch(e.target.value)} />
                         <datalist id="numbers">
-                            {withdrawArray.map(withdraw => {
+                            {phoneNumbers.map((phone, index) => {
                                 return(
-                                <option key={withdraw.id} value={withdraw.phone}/>
+                                <option key={index} value={phone}/>
                                 )
                             })}
                             
@@ -72,7 +80,7 @@ function Withdraw() {
                     <div className={styles.content}>
                         {withdrawArray.map((withdraw, index) => {
                             return (
-                                <div className={active === index ? `${styles.card} ${styles.active}` : `${styles.card}`} key={withdraw} onClick={() => setActive(active === index ? null : index)}>
+                                <div className={active === index ? `${styles.card} ${styles.active}` : `${styles.card}`} key={withdraw.id} onClick={() => setActive(active === index ? null : index)}>
                                     <div className={styles.cardHead}>
                                         <h2>{withdraw.phone}</h2>
                                         <h2><IoIosArrowDown /></h2>
