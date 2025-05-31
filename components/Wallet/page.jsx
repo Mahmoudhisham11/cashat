@@ -35,28 +35,34 @@ function Wallet({openWallet, setOpenWallet}) {
     } ,[userEmail])
 
     const handleWalletAdd = async() => {
-        const q = query(collection(db, 'users'), where('email', '==', userEmail))
-        const querySnapshot = await getDocs(q)
-        if(!querySnapshot.empty) {
-            const userDoc = querySnapshot.docs[0]
-            const userData = userDoc.data()
-            const userRef = doc(db, 'users', userDoc.id)
-            await addDoc(collection(db, 'operations'), {
-                phone,
-                userEmail,
-                profit,
-                operationVal,
-                type: 'سحب',
-            })
-            await updateDoc(userRef, {
-                wallet: Number(userData.wallet) + Number(operationVal),
-                cash: Number(userData.cash) - Number(operationVal)
-            })
-            alert('تم اتمام العملية بنجاح')
-            setPhone('')
-            setProfit('')
-            setOperationVal('')
+        const isExisting = phoneNumbers.includes(phone)
+        if(!isExisting && phoneNumbers.length >= 25) {
+            alert("لقد وصلت للحد الاقصى لعدد الشرائح")
+        }else {
+            const q = query(collection(db, 'users'), where('email', '==', userEmail))
+            const querySnapshot = await getDocs(q)
+            if(!querySnapshot.empty) {
+                const userDoc = querySnapshot.docs[0]
+                const userData = userDoc.data()
+                const userRef = doc(db, 'users', userDoc.id)
+                await addDoc(collection(db, 'operations'), {
+                    phone,
+                    userEmail,
+                    profit,
+                    operationVal,
+                    type: 'سحب',
+                })
+                await updateDoc(userRef, {
+                    wallet: Number(userData.wallet) + Number(operationVal),
+                    cash: Number(userData.cash) - Number(operationVal)
+                })
+                alert('تم اتمام العملية بنجاح')
+                setPhone('')
+                setProfit('')
+                setOperationVal('')
+            }
         }
+        
     }
 
     return(

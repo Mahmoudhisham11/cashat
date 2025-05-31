@@ -54,6 +54,12 @@ body {
     border-radius: 28px;
     padding: 7px;
 }
+.input select {
+    width: 100%;
+    border: 1px solid black;
+    outline: none;
+    border-radius: 28px;
+}
 .shadowBox {
     display: none;
 }

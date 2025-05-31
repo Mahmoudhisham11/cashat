@@ -12,8 +12,10 @@ import Cash from "../Cash/page"
 import AjelComp from "../AjelComp/page"
 import { db } from "../../app/firebase";
 import { collection, deleteDoc, getDocs, onSnapshot, query, where, doc } from "firebase/firestore";
+import { useRouter } from "next/navigation";
 
 function Main() {
+    const router = useRouter()
     const [openWallet, setOpenWallet] = useState(false)
     const [openCash, setOpenCash] = useState(false)
     const [openAjel, setOpenAjel] = useState(false)
@@ -36,6 +38,10 @@ function Main() {
         const userSubscribe = onSnapshot(q, (querySanpshot) => {
             const dataDoc = querySanpshot.docs[0]
             const data = dataDoc.data()
+            if(!data.isSubscribed) {
+                localStorage.clear()
+                window.location.reload()
+            }
             setWallet(data.wallet)
             setCash(data.cash)
             setTotal(Number(data.cash) + Number(data.wallet))

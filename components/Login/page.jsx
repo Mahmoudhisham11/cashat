@@ -2,7 +2,7 @@
 import { useState } from "react";
 import styles from "./styles.module.css";
 import {db} from "../../app/firebase"
-import { addDoc, collection, getDocs, query, where } from "firebase/firestore";
+import { addDoc, collection, getDocs, query, serverTimestamp, where } from "firebase/firestore";
 
 function Login() {
     const [acitve, setActive] = useState(true)
@@ -19,7 +19,15 @@ function Login() {
             const q = query(userRef, where("email", "==", email))
             const querySnapshot = await getDocs(q)
             if(querySnapshot.empty) {
-                await addDoc(userRef, {name, email, password, wallet, cash})
+                await addDoc(userRef, {
+                    name, 
+                    email, 
+                    password, 
+                    wallet, 
+                    cash,
+                    isSubscribed: false,
+                    date: serverTimestamp()
+                })
                 alert('تم انشاء حساب جديد')
                 setName('')
                 setEmail('')
@@ -49,13 +57,17 @@ function Login() {
             if(userData.password !== password) {
                 alert("يوجد مشكلة في كلمة المرور")
             }else {
-                if(typeof window !== "undefined") {
-                    localStorage.setItem("email", email)
-                    localStorage.setItem("name", userData.name)
-                }
-                if(typeof window !== "undefined") {
-                    window.location.reload()
-                }
+                    if(userData.isSubscribed !== true) {
+                        alert("انت غير مشترك في التطبيق كلم 01124514331 للاشتراك في التطبيق")
+                    }else {
+                        if(typeof window !== "undefined") {
+                            localStorage.setItem("email", email)
+                            localStorage.setItem("name", userData.name)
+                        }
+                        if(typeof window !== "undefined") {
+                            window.location.reload()
+                        }
+                    }
             }
         }
     }
