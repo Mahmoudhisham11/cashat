@@ -1,22 +1,40 @@
 'use client';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styles from "./styles.module.css";
 import { IoIosCloseCircle } from "react-icons/io";
 import { db } from "../../app/firebase";
-import { addDoc, collection, doc, getDocs, query, updateDoc, where } from "firebase/firestore";
+import { addDoc, collection, doc, getDocs, query, updateDoc, where, onSnapshot } from "firebase/firestore";
 
 function Cash({openCash, setOpenCash}) {
         const [operationVal, setOperationVal] = useState('')
+        const [phone, setPhone] = useState('')
         const [profit, setProfit] = useState('')
         const [userEmail, setUserEmail] = useState('')
+        const [phoneNumbers, setPhoneNumbers] = useState([])
+
+        useEffect(() => {
+            if(typeof window !== "undefined") {
+                const stroageEamil = localStorage.getItem('email')
+                if(stroageEamil) {
+                    setUserEmail(stroageEamil)
+                }
+            }
+            const q = query(collection(db, 'operations'), where('userEmail', '==', userEmail))
+            const unSubscripe = onSnapshot(q, (querySnapshot) => {
+                const numbersArray = []
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data()
+                    if(data.phone) {
+                        numbersArray.push(data.phone)
+                    }
+                })
+                const uniqueNumbers = [...new Set(numbersArray)]
+                setPhoneNumbers(uniqueNumbers)    
+            })
+            return () => unSubscripe()
+        } ,[userEmail])
 
         const handleCashAdd = async() => {
-                if(typeof window !== "undefined") {
-                    const stroageEamil = localStorage.getItem('email')
-                    if(stroageEamil) {
-                        setUserEmail(stroageEamil)
-                    }
-                }
                 const q = query(collection(db, 'users'), where('email', '==', userEmail))
                 const querySnapshot = await getDocs(q)
                 if(!querySnapshot.empty) {
@@ -27,6 +45,7 @@ function Cash({openCash, setOpenCash}) {
                         userEmail,
                         profit, 
                         operationVal,
+                        phone,
                         type: 'ايداع',
                     })
                     await updateDoc(userRef, {
@@ -36,6 +55,7 @@ function Cash({openCash, setOpenCash}) {
                     alert('تم اتمام العملية بنجاح')
                     setProfit('')
                     setOperationVal('')
+                    setPhone('')
                 }
             }
 
@@ -44,6 +64,19 @@ function Cash({openCash, setOpenCash}) {
             <div className="box">
                 <button className={styles.closeBtn} onClick={() => setOpenCash(false)}><IoIosCloseCircle/></button>
                 <h2>عملية ايداع</h2>
+                <div className="inputContainer">
+                    <label htmlFor="">ادخل رقم الشريحة : </label>
+                    <input list="numbersData" value={phone} placeholder="ادخل رقم الشريحة التي ستقوم بالايداع منها" onChange={(e) => setPhone(e.target.value)}/>
+                    <datalist id="numbersData">
+                        {
+                            phoneNumbers.map((phoneNumber, index) => {
+                                return(
+                                    <option key={index} value={phoneNumber} />
+                                )
+                            })
+                        }
+                    </datalist>
+                </div>
                 <div className="boxForm">
                     <div className="inputContainer">
                         <label htmlFor="">قيمة الايداع : </label>

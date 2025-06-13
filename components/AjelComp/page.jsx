@@ -36,10 +36,6 @@ function AjelComp({openAjel, setOpenAjel}) {
     }, [userEmail])
 
     const handleCashAdd = async() => {
-            const isExisting = phoneNumbers.includes(phone)
-            if(!isExisting && phoneNumbers >= 25) {
-                alert("لقد وصلت الى الحد الاقصى لعدد الشرائح لا يمكنك اضافة شرائح اخرى")
-            }else {
                 const q = query(collection(db, 'users'), where('email', '==', userEmail))
                 const querySnapshot = await getDocs(q)
                 if(!querySnapshot.empty) {
@@ -64,8 +60,6 @@ function AjelComp({openAjel, setOpenAjel}) {
                 }
             }
             
-        }
-
     return(
         <div className={openAjel ? "shadowBox active" : "shadowBox"}>
             <div className="box">

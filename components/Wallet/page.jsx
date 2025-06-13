@@ -35,10 +35,6 @@ function Wallet({openWallet, setOpenWallet}) {
     } ,[userEmail])
 
     const handleWalletAdd = async() => {
-        const isExisting = phoneNumbers.includes(phone)
-        if(!isExisting && phoneNumbers.length >= 25) {
-            alert("لقد وصلت للحد الاقصى لعدد الشرائح")
-        }else {
             const q = query(collection(db, 'users'), where('email', '==', userEmail))
             const querySnapshot = await getDocs(q)
             if(!querySnapshot.empty) {
@@ -63,7 +59,6 @@ function Wallet({openWallet, setOpenWallet}) {
             }
         }
         
-    }
 
     return(
         <div className={openWallet ? "shadowBox active" : "shadowBox"}>
