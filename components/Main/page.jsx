@@ -9,16 +9,15 @@ import SliderCards from "../SliderCards/page";
 import Nav from "../Nav/page";
 import Wallet from "../Wallet/page"
 import Cash from "../Cash/page"
-import AjelComp from "../AjelComp/page"
 import { db } from "../../app/firebase";
 import { collection, deleteDoc, getDocs, onSnapshot, query, where, doc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
+import { HiQrcode } from "react-icons/hi";
 
 function Main() {
     const router = useRouter()
     const [openWallet, setOpenWallet] = useState(false)
     const [openCash, setOpenCash] = useState(false)
-    const [openAjel, setOpenAjel] = useState(false)
     const [userName, setUesrName] = useState('')
     const [userEmail, setUserEmail] = useState('')
     const [cash, setCash] = useState('')
@@ -64,7 +63,6 @@ function Main() {
             <Nav/>
             <Wallet openWallet={openWallet} setOpenWallet={setOpenWallet} />
             <Cash openCash={openCash} setOpenCash={setOpenCash}/>
-            <AjelComp openAjel={openAjel} setOpenAjel={setOpenAjel}/>
             <div className={styles.title}>
                 <div className={styles.text}>
                     <p>مرحبا بعودتك</p>
@@ -88,10 +86,12 @@ function Main() {
                                 <button onClick={() => setOpenCash(true)}><FaArrowUp/></button>
                                 <p>ايداع</p>
                             </div>
-                            <div className={styles.btnsContent}>
-                                <button onClick={() => setOpenAjel(true)}><TbZoomMoneyFilled/></button>
-                                <p>الاجل</p>
-                            </div>
+                            {userEmail !== "antary@gmail.com" ? "" : 
+                                <div className={styles.btnsContent}>
+                                    <button onClick={() => router.push('/Numbers')}><HiQrcode/></button>
+                                    <p>المحافظ</p>
+                                </div>
+                            }
                         </div>
                     </div>
                 </div>
