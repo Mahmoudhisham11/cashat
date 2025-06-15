@@ -19,17 +19,13 @@ function Wallet({openWallet, setOpenWallet}) {
                 setUserEmail(stroageEamil)
             }
         }
-        const q = query(collection(db, 'operations'), where('userEmail', '==', userEmail))
+        const q = query(collection(db, 'numbers'), where('userEmail', '==', userEmail))
         const unSubscripe = onSnapshot(q, (querySnapshot) => {
             const numbersArray = []
             querySnapshot.forEach((doc) => {
-                const data = doc.data()
-                if(data.phone) {
-                    numbersArray.push(data.phone)
-                }
+                numbersArray.push({...doc.data(), id: doc.id})
             })
-            const uniqueNumbers = [...new Set(numbersArray)]
-            setPhoneNumbers(uniqueNumbers)    
+            setPhoneNumbers(numbersArray)    
         })
         return () => unSubscripe()
     } ,[userEmail])
@@ -52,6 +48,17 @@ function Wallet({openWallet, setOpenWallet}) {
                     wallet: Number(userData.wallet) + Number(operationVal),
                     cash: Number(userData.cash) - Number(operationVal)
                 })
+                const nq = query(collection(db, 'numbers'), where('phone', '==', phone))
+                const nSnapshot = await getDocs(nq)
+                if(!nSnapshot.empty) {
+                    const numberDoc = nSnapshot.docs[0]
+                    const numberRef= doc(db, 'numbers', numberDoc.id)
+                    const numberData = numberDoc.data()
+                    await updateDoc(numberRef, {
+                        amount: Number(numberData.amount) + Number(operationVal),
+                        withdraw: Number(numberData.withdraw) + Number(operationVal)
+                    })
+                }
                 alert('تم اتمام العملية بنجاح')
                 setPhone('')
                 setProfit('')
@@ -68,16 +75,15 @@ function Wallet({openWallet, setOpenWallet}) {
                 <div className="boxForm">
                     <div className="inputContainer">
                         <label htmlFor="">ادخل رقم الشريحة : </label>
-                        <input list="numbersData" value={phone} placeholder="ادخل رقم الشريحة التي ستقوم بالسحب منها" onChange={(e) => setPhone(e.target.value)}/>
-                        <datalist id="numbersData">
+                        <select onChange={(e) => setPhone(e.target.value)}>
                             {
-                                phoneNumbers.map((phoneNumber, index) => {
+                                phoneNumbers.map(phoneNumber => {
                                     return(
-                                        <option key={index} value={phoneNumber} />
+                                        <option key={phoneNumber.id} value={phoneNumber.phone} style={{color: Number(phoneNumber.withdraw) + Number(phoneNumber.deposit) >= 50000 ? 'red' : ''}} >{phoneNumber.phone}</option>
                                     )
                                 })
                             }
-                        </datalist>
+                        </select>
                     </div>
                     <div className="inputContainer">
                         <label htmlFor="">قيمة السحب : </label>

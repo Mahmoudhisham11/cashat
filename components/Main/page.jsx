@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import styles from "./styles.module.css";
 import { FaArrowUp } from "react-icons/fa";
 import { FaArrowDown } from "react-icons/fa";
-import { TbZoomMoneyFilled } from "react-icons/tb";
 import { IoReload } from "react-icons/io5";
 import SliderCards from "../SliderCards/page";
 import Nav from "../Nav/page";
@@ -86,12 +85,10 @@ function Main() {
                                 <button onClick={() => setOpenCash(true)}><FaArrowUp/></button>
                                 <p>ايداع</p>
                             </div>
-                            {userEmail !== "antary@gmail.com" ? "" : 
-                                <div className={styles.btnsContent}>
-                                    <button onClick={() => router.push('/Numbers')}><HiQrcode/></button>
-                                    <p>المحافظ</p>
-                                </div>
-                            }
+                            <div className={styles.btnsContent}>
+                                <button onClick={() => router.push('/Numbers')}><HiQrcode/></button>
+                                <p>المحافظ</p>
+                            </div>
                         </div>
                     </div>
                 </div>
