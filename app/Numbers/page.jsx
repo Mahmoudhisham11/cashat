@@ -101,7 +101,7 @@ function Numbers() {
                                     <div className={styles.divFooter}>
                                         <strong>قيمة المحفظة : <p>{number.amount}</p></strong>
                                         <strong>قيمة عمليات الاستلام : <p>{number.withdraw}</p></strong>
-                                        <strong>قيمة عمليات الارسال : <p>{number.deposit}</p></strong>
+                                        <strong>قيمة عمليات السحب : <p>{number.deposit}</p></strong>
                                         <strong>قيمة الليمت : <p>{`${(number.withdraw + number.deposit)}`}</p></strong>
                                         <strong>المتبقي على الليمت : <p>{`${60000 - (number.withdraw + number.deposit)}`}</p></strong>
                                     </div>
