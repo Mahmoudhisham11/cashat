@@ -11,6 +11,7 @@ function Cash({openCash, setOpenCash}) {
         const [profit, setProfit] = useState('')
         const [userEmail, setUserEmail] = useState('')
         const [phoneNumbers, setPhoneNumbers] = useState([])
+        const [limited, setLimited] = useState(false)
 
         useEffect(() => {
             if(typeof window !== "undefined") {
@@ -28,43 +29,44 @@ function Cash({openCash, setOpenCash}) {
                 setPhoneNumbers(numbersArray)    
             })
             return () => unSubscripe()
-        } ,[userEmail,phoneNumbers])
+        } ,[userEmail])
+
 
         const handleCashAdd = async() => {
-                const q = query(collection(db, 'users'), where('email', '==', userEmail))
-                const querySnapshot = await getDocs(q)
-                if(!querySnapshot.empty) {
-                    const userDoc = querySnapshot.docs[0]
-                    const userData = userDoc.data()
-                    const userRef = doc(db, 'users', userDoc.id)
-                    await addDoc(collection(db, 'operations'), {
-                        userEmail,
-                        profit, 
-                        operationVal,
-                        phone,
-                        type: 'ايداع',
+            const q = query(collection(db, 'users'), where('email', '==', userEmail))
+            const querySnapshot = await getDocs(q)
+            if(!querySnapshot.empty) {
+                const userDoc = querySnapshot.docs[0]
+                const userData = userDoc.data()
+                const userRef = doc(db, 'users', userDoc.id)
+                await addDoc(collection(db, 'operations'), {
+                    userEmail,
+                    profit, 
+                    operationVal,
+                    phone,
+                    type: 'ايداع',
+                })
+                await updateDoc(userRef, {
+                    wallet: Number(userData.wallet) - Number(operationVal),
+                    cash: Number(userData.cash) + Number(operationVal)
+                })
+                const nq = query(collection(db, 'numbers'), where('phone', '==', phone), where('userEmail', '==', userEmail))
+                const nSnapshot = await getDocs(nq)
+                if(!nSnapshot.empty) {
+                    const numberDoc = nSnapshot.docs[0]
+                    const numberRef= doc(db, 'numbers', numberDoc.id)
+                    const numberData = numberDoc.data()
+                    await updateDoc(numberRef, {
+                        amount: Number(numberData.amount) - Number(operationVal),
+                        deposit: Number(numberData.deposit) - Number(operationVal)
                     })
-                    await updateDoc(userRef, {
-                        wallet: Number(userData.wallet) - Number(operationVal),
-                        cash: Number(userData.cash) + Number(operationVal)
-                    })
-                    const nq = query(collection(db, 'numbers'), where('phone', '==', phone))
-                    const nSnapshot = await getDocs(nq)
-                    if(!nSnapshot.empty) {
-                        const numberDoc = nSnapshot.docs[0]
-                        const numberRef= doc(db, 'numbers', numberDoc.id)
-                        const numberData = numberDoc.data()
-                        await updateDoc(numberRef, {
-                            amount: Number(numberData.amount) - Number(operationVal),
-                            deposit: Number(numberData.deposit) - Number(operationVal)
-                        })
-                    }
-                    alert('تم اتمام العملية بنجاح')
-                    setProfit('')
-                    setOperationVal('')
-                    setPhone('')
                 }
+                alert('تم اتمام العملية بنجاح')
+                setProfit('')
+                setOperationVal('')
+                setPhone('')
             }
+        }
 
     return(
         <div className={openCash ? "shadowBox active" : "shadowBox"}>
@@ -73,15 +75,14 @@ function Cash({openCash, setOpenCash}) {
                 <h2>عملية ايداع</h2>
                 <div className="inputContainer">
                     <label htmlFor="">ادخل رقم الشريحة : </label>
-                    <select onChange={(e) => setPhone(e.target.value)}>
-                        {
-                            phoneNumbers.map(phoneNumber => {
-                                return(
-                                    <option key={phoneNumber.id} value={phoneNumber.phone} style={{color: Number(phoneNumber.withdraw) + Number(phoneNumber.deposit) >= 50000 ? 'red' : ''}} >{phoneNumber.phone}</option>
-                                )
-                            })
-                        }
-                    </select>
+                    <input type="number" list="numbers" onChange={(e) => setPhone(e.target.value)} placeholder="ابحث عن رقم المحفظة"/>
+                    <datalist id="numbers">
+                        {phoneNumbers.map(phoneNumber => {
+                            return(
+                                <option key={phoneNumber.id} value={phoneNumber.phone}/>
+                            )
+                        })}
+                    </datalist>
                 </div>
                 <div className="boxForm">
                     <div className="inputContainer">

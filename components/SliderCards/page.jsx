@@ -56,7 +56,7 @@ function SliderCards({wallet, cash}) {
                             </div>
                             <div className={styles.cardBody}>
                                 <p>رصيد المحفطة</p>
-                                <strong>{wallet} جنية</strong>
+                                <strong>{userEmail === 'abdulrhmansalahmohamed@gmail.com' ? 0 : <>{wallet}</>} جنية</strong>
                             </div>
                         </div>
                     </SwiperSlide>
@@ -67,7 +67,7 @@ function SliderCards({wallet, cash}) {
                             </div>
                             <div className={styles.cardBody}>
                                 <p>رصيد الكاش</p>
-                                <strong>{cash} جنية</strong>
+                                <strong>{userEmail === 'abdulrhmansalahmohamed@gmail.com' ? 0 : <>{cash}</>} جنية</strong>
                             </div>
                         </div>
                     </SwiperSlide>
@@ -78,7 +78,7 @@ function SliderCards({wallet, cash}) {
                             </div>
                             <div className={styles.cardBody}>
                                 <p>الربح اليومي</p>
-                                <strong>{total} جنية</strong>
+                                <strong>{userEmail === 'abdulrhmansalahmohamed@gmail.com' ? 0 : <>{total}</>} جنية</strong>
                             </div>
                         </div>
                     </SwiperSlide>

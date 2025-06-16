@@ -13,19 +13,15 @@ function Nav() {
         <nav className={styles.nav}>
             <Link href={"/withdraw"} className={styles.navLink}>
                 <span><FaArrowDown/></span>
-                <span>سحب</span>
+                <span>تقارير الارسال</span>
             </Link>
-            <Link href={"/deposit"} className={styles.navLink}>
-                <span><FaArrowUp/></span>
-                <span>ايداع</span>
-            </Link>
-            <Link href={"/"} className={`${styles.navLink} ${styles.active}`}>
+            <Link href={"/"} className={styles.navLink}>
                 <span><RiHome5Line/></span>
                 <span>الرئيسية</span>
             </Link>
-            <Link href={"/ajel"} className={styles.navLink}>
-                <span><TbZoomMoneyFilled/></span>
-                <span>الاجل</span>
+            <Link href={"/deposit"} className={styles.navLink}>
+                <span><FaArrowUp/></span>
+                <span>تقارير الاستلام</span>
             </Link>
             <Link href={"/sittings"} className={styles.navLink}>
                 <span><FaGear/></span>

@@ -48,7 +48,7 @@ function Wallet({openWallet, setOpenWallet}) {
                     wallet: Number(userData.wallet) + Number(operationVal),
                     cash: Number(userData.cash) - Number(operationVal)
                 })
-                const nq = query(collection(db, 'numbers'), where('phone', '==', phone))
+                const nq = query(collection(db, 'numbers'), where('phone', '==', phone), where('userEmail', '==', userEmail))
                 const nSnapshot = await getDocs(nq)
                 if(!nSnapshot.empty) {
                     const numberDoc = nSnapshot.docs[0]
@@ -75,15 +75,14 @@ function Wallet({openWallet, setOpenWallet}) {
                 <div className="boxForm">
                     <div className="inputContainer">
                         <label htmlFor="">ادخل رقم الشريحة : </label>
-                        <select onChange={(e) => setPhone(e.target.value)}>
-                            {
-                                phoneNumbers.map(phoneNumber => {
-                                    return(
-                                        <option key={phoneNumber.id} value={phoneNumber.phone} style={{color: Number(phoneNumber.withdraw) + Number(phoneNumber.deposit) >= 50000 ? 'red' : ''}} >{phoneNumber.phone}</option>
-                                    )
-                                })
-                            }
-                        </select>
+                    <input type="number" list="numbers" onChange={(e) => setPhone(e.target.value)} placeholder="ابحث عن رقم المحفظة"/>
+                    <datalist id="numbers">
+                        {phoneNumbers.map(phoneNumber => {
+                            return(
+                                <option key={phoneNumber.id} value={phoneNumber.phone}/>
+                            )
+                        })}
+                    </datalist>
                     </div>
                     <div className="inputContainer">
                         <label htmlFor="">قيمة السحب : </label>

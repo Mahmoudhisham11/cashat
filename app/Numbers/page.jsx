@@ -89,11 +89,21 @@ function Numbers() {
                         {numbers.map(number => {
                             return(
                                 <div key={number.id} className={styles.numDiv}>
-                                    <h2 style={{color: Number(number.withdraw) + Number(number.deposit) >= 50000 ? 'red' : ''}}>{number.phone}</h2>
-                                    <div className={styles.btns}>
-                                        <button onClick={() => handleQr(number.phone)}><HiQrcode/></button>
-                                        <button onClick={() => handleLimit(number.id, number.withdraw, number.deposit)}><IoReloadOutline/></button>
-                                        <button onClick={() => handleDelet(number.id)}><FaTrashAlt/></button>
+                                    <div className={styles.divHeader}>
+                                        <h2 style={{color: Number(number.withdraw) + Number(number.deposit) >= 50000 ? 'red' : ''}}>{number.phone}</h2>
+                                        <div className={styles.btns}>
+                                            <button onClick={() => handleQr(number.phone)}><HiQrcode/></button>
+                                            <button onClick={() => handleLimit(number.id, number.withdraw, number.deposit,)}><IoReloadOutline/></button>
+                                            <button onClick={() => handleDelet(number.id)}><FaTrashAlt/></button>
+                                        </div>
+                                    </div>
+                                    <hr />
+                                    <div className={styles.divFooter}>
+                                        <strong>قيمة المحفظة : <p>{number.amount}</p></strong>
+                                        <strong>قيمة عمليات الاستلام : <p>{number.withdraw}</p></strong>
+                                        <strong>قيمة عمليات الارسال : <p>{number.deposit}</p></strong>
+                                        <strong>قيمة الليمت : <p>{`${(number.withdraw + number.deposit)}`}</p></strong>
+                                        <strong>المتبقي على الليمت : <p>{`${60000 - (number.withdraw + number.deposit)}`}</p></strong>
                                     </div>
                                 </div>
                             )

@@ -72,18 +72,24 @@ function Main() {
             <div className={styles.container}>
                 <div className={styles.cardContainer}>
                     <div className={styles.headerCard}>
-                        <div className={styles.top}>
-                            <p>رائس المال</p>
-                            <strong>{total} جنية</strong>
-                        </div>
+                        {userEmail === "abdulrhmansalahmohamed@gmail.com" ?
+                            <></>:
+                            <>
+                            <div className={styles.top}>
+                                <p>رائس المال</p>
+                                <strong>{total} جنية</strong>
+                            </div>
+                            </>
+                        }
+
                         <div className={styles.btsContainer}>
                             <div className={styles.btnsContent}>
                                 <button onClick={() => setOpenWallet(true)}><FaArrowDown/></button>
-                                <p>سحب</p>
+                                <p>الاستلام</p>
                             </div>
                             <div className={styles.btnsContent}>
                                 <button onClick={() => setOpenCash(true)}><FaArrowUp/></button>
-                                <p>ايداع</p>
+                                <p>الارسال</p>
                             </div>
                             <div className={styles.btnsContent}>
                                 <button onClick={() => router.push('/Numbers')}><HiQrcode/></button>
