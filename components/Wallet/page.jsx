@@ -71,7 +71,7 @@ function Wallet({openWallet, setOpenWallet}) {
         <div className={openWallet ? "shadowBox active" : "shadowBox"}>
             <div className="box">
                 <button className={styles.closeBtn} onClick={() => setOpenWallet(false)}><IoIosCloseCircle/></button>
-                <h2>عملية سحب</h2>
+                <h2>عملية استلام</h2>
                 <div className="boxForm">
                     <div className="inputContainer">
                         <label htmlFor="">ادخل رقم الشريحة : </label>

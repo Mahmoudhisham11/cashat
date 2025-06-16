@@ -13,7 +13,7 @@ function Nav() {
         <nav className={styles.nav}>
             <Link href={"/withdraw"} className={styles.navLink}>
                 <span><FaArrowDown/></span>
-                <span>تقارير الارسال</span>
+                <span>تقارير الاستلام</span>
             </Link>
             <Link href={"/"} className={styles.navLink}>
                 <span><RiHome5Line/></span>
@@ -21,7 +21,7 @@ function Nav() {
             </Link>
             <Link href={"/deposit"} className={styles.navLink}>
                 <span><FaArrowUp/></span>
-                <span>تقارير الاستلام</span>
+                <span>تقارير السحب</span>
             </Link>
             <Link href={"/sittings"} className={styles.navLink}>
                 <span><FaGear/></span>

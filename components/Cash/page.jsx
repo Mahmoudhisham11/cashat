@@ -72,7 +72,7 @@ function Cash({openCash, setOpenCash}) {
         <div className={openCash ? "shadowBox active" : "shadowBox"}>
             <div className="box">
                 <button className={styles.closeBtn} onClick={() => setOpenCash(false)}><IoIosCloseCircle/></button>
-                <h2>عملية ايداع</h2>
+                <h2>عملية سحب</h2>
                 <div className="inputContainer">
                     <label htmlFor="">ادخل رقم الشريحة : </label>
                     <input type="number" list="numbers" onChange={(e) => setPhone(e.target.value)} placeholder="ابحث عن رقم المحفظة"/>

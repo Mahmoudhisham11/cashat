@@ -55,7 +55,7 @@ function Deposit() {
         <div className="main">
             <div className={styles.withdrawContainer}>
                 <div className="title">
-                    <h2>سجل الايداع</h2>
+                    <h2>سجل السحب</h2>
                     <Link href={"/"} className="titleLink"><IoIosArrowDropleftCircle /></Link>
                 </div>
                 <div className={styles.inputContainer}>
@@ -74,7 +74,7 @@ function Deposit() {
                 </div>
                 <div className={styles.container}>
                     <div className={styles.containerTitle}>
-                        <h2>اجمالي الايداع : {total} جنية</h2>
+                        <h2>اجمالي السحب : {total} جنية</h2>
                     </div>
                     <div className={styles.content}>
                         {cashArray.map((cash, index) => {

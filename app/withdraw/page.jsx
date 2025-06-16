@@ -56,7 +56,7 @@ function Withdraw() {
         <div className="main">
             <div className={styles.withdrawContainer}>
                 <div className="title">
-                    <h2>سجل السحب</h2>
+                    <h2>سجل الاستلام</h2>
                     <Link href={"/"} className="titleLink"><IoIosArrowDropleftCircle /></Link>
                 </div>
                 <div className={styles.inputContainer}>
@@ -75,7 +75,7 @@ function Withdraw() {
                 </div>
                 <div className={styles.container}>
                     <div className={styles.containerTitle}>
-                        <h2>اجمالي السحب : {total} جنية</h2>
+                        <h2>اجمالي الاستلام : {total} جنية</h2>
                     </div>
                     <div className={styles.content}>
                         {withdrawArray.map((withdraw, index) => {
