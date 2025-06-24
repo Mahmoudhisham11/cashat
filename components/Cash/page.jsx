@@ -58,7 +58,7 @@ function Cash({openCash, setOpenCash}) {
                     const numberData = numberDoc.data()
                     await updateDoc(numberRef, {
                         amount: Number(numberData.amount) - Number(operationVal),
-                        deposit: Number(numberData.deposit) - Number(operationVal)
+                        deposit:Number(operationVal) + Number(numberData.deposit)
                     })
                 }
                 alert('تم اتمام العملية بنجاح')

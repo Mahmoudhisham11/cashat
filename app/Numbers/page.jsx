@@ -99,11 +99,16 @@ function Numbers() {
                                     </div>
                                     <hr />
                                     <div className={styles.divFooter}>
-                                        <strong>قيمة المحفظة : <p>{number.amount}</p></strong>
-                                        <strong>قيمة عمليات الاستلام : <p>{number.withdraw}</p></strong>
-                                        <strong>قيمة عمليات السحب : <p>{number.deposit}</p></strong>
-                                        <strong>قيمة الليمت : <p>{`${(number.withdraw + number.deposit)}`}</p></strong>
-                                        <strong>المتبقي على الليمت : <p>{`${60000 - (number.withdraw + number.deposit)}`}</p></strong>
+                                        <strong>قيمة المحفظة : <p>{Number(number.amount) || 0}</p></strong>
+                                        <strong>قيمة عمليات الاستلام : <p>{Number(number.withdraw) || 0}</p></strong>
+                                        <strong>قيمة عمليات السحب : <p>{Number(number.deposit) || 0}</p></strong>
+                                        <strong>قيمة الليمت : 
+                                        <p>{Number(number.withdraw || 0) + Number(number.deposit || 0)}</p>
+                                        </strong>
+                                        <strong>المتبقي على الليمت : 
+                                        <p>{60000 - (Number(number.withdraw || 0) + Number(number.deposit || 0))}</p>
+                                        </strong>
+
                                     </div>
                                 </div>
                             )
