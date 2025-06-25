@@ -147,6 +147,12 @@
     cursor: pointer;
 }
 
+.tableContainer {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
 @media(max-width: 767px) {
     .boxContainer {
         top: 85px;

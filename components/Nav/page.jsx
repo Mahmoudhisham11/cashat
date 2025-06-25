@@ -1,28 +1,37 @@
 "use client";
 import styles from "./style.module.css";
 import Link from "next/link";
-import { GoHistory } from "react-icons/go";
 import { FaArrowUp } from "react-icons/fa";
-import { FaArrowDown } from "react-icons/fa";
-import { TbZoomMoneyFilled } from "react-icons/tb";
+import { TbReportSearch } from "react-icons/tb";
 import { RiHome5Line } from "react-icons/ri";
 import { FaGear } from "react-icons/fa6";
+import { FaCameraRetro } from "react-icons/fa";
+import { useEffect, useState } from "react";
 
 function Nav() {
+    const [userEmail, setUserEmail] = useState('') 
+
+    useEffect(() => {
+        if(typeof window !== 'undefined') {
+            setUserEmail(localStorage.getItem('email'))
+        }
+    }, [])
+
     return(
         <nav className={styles.nav}>
-            <Link href={"/withdraw"} className={styles.navLink}>
-                <span><FaArrowDown/></span>
-                <span>تقارير الاستلام</span>
+            <Link href={"/reports"} className={styles.navLink}>
+                <span><TbReportSearch/></span>
+                <span>التقارير</span>
             </Link>
             <Link href={"/"} className={styles.navLink}>
                 <span><RiHome5Line/></span>
                 <span>الرئيسية</span>
             </Link>
-            <Link href={"/deposit"} className={styles.navLink}>
-                <span><FaArrowUp/></span>
-                <span>تقارير السحب</span>
-            </Link>
+            {userEmail === 'mahmoudhisham@gmail.com' ?             
+            <Link href={"/image"} className={styles.navLink}>
+                <span><FaCameraRetro/></span>
+                <span>الصور</span>
+            </Link>:""}
             <Link href={"/sittings"} className={styles.navLink}>
                 <span><FaGear/></span>
                 <span>الاعدادات</span>

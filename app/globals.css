@@ -92,6 +92,49 @@ body {
     gap: 10px;
 }
 
+table {
+  width: 50%;
+  text-align: center;
+}
+table, th, td {
+  padding: 20px;
+  border-collapse: collapse;
+}
+thead th {
+  position: sticky;
+  top: 0;
+  background-color: var(--black-color);
+  color: whitesmoke;
+}
+tbody tr:nth-child(even) {
+    background-color: #0000000b;
+}
+.actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+.actions button {
+  width: 30px;
+  height: 30px;
+  font-size: 20px;
+  padding: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  border-radius: 8px;
+  background-color: transparent;
+  cursor: pointer;
+}
+.actions button:first-child {
+  color: rgb(30, 30, 199);
+}
+.actions button:last-child {
+  color: red;
+}
+
 @media(max-width: 767px) {
     .title h2 {
         font-size: 30px;

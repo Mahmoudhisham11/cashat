@@ -16,7 +16,8 @@
     "react-dom": "^18",
     "react-icons": "^5.2.1",
     "react-qr-code": "^2.0.15",
-    "swiper": "^11.2.6"
+    "swiper": "^11.2.6",
+    "tesseract.js": "^6.0.1"
   },
   "devDependencies": {
     "@types/react": "18.3.3",

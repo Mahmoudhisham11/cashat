@@ -8,7 +8,7 @@ import { addDoc, collection, doc, getDocs, query, updateDoc, where, onSnapshot }
 function Cash({openCash, setOpenCash}) {
         const [operationVal, setOperationVal] = useState('')
         const [phone, setPhone] = useState('')
-        const [profit, setProfit] = useState('')
+        const [commation, setCommation] = useState('')
         const [userEmail, setUserEmail] = useState('')
         const [phoneNumbers, setPhoneNumbers] = useState([])
         const [limited, setLimited] = useState(false)
@@ -39,12 +39,13 @@ function Cash({openCash, setOpenCash}) {
                 const userDoc = querySnapshot.docs[0]
                 const userData = userDoc.data()
                 const userRef = doc(db, 'users', userDoc.id)
-                await addDoc(collection(db, 'operations'), {
+                await addDoc(collection(db, 'reports'), {
                     userEmail,
-                    profit, 
+                    commation, 
                     operationVal,
                     phone,
-                    type: 'ايداع',
+                    type: 'ارسال',
+                    date: new Date().toISOString().split("T")[0]
                 })
                 await updateDoc(userRef, {
                     wallet: Number(userData.wallet) - Number(operationVal),
@@ -62,7 +63,7 @@ function Cash({openCash, setOpenCash}) {
                     })
                 }
                 alert('تم اتمام العملية بنجاح')
-                setProfit('')
+                setCommation('')
                 setOperationVal('')
                 setPhone('')
             }
@@ -72,7 +73,7 @@ function Cash({openCash, setOpenCash}) {
         <div className={openCash ? "shadowBox active" : "shadowBox"}>
             <div className="box">
                 <button className={styles.closeBtn} onClick={() => setOpenCash(false)}><IoIosCloseCircle/></button>
-                <h2>عملية سحب</h2>
+                <h2>عملية ارسال</h2>
                 <div className="inputContainer">
                     <label htmlFor="">ادخل رقم الشريحة : </label>
                     <input type="number" list="numbers" onChange={(e) => setPhone(e.target.value)} placeholder="ابحث عن رقم المحفظة"/>
@@ -86,12 +87,12 @@ function Cash({openCash, setOpenCash}) {
                 </div>
                 <div className="boxForm">
                     <div className="inputContainer">
-                        <label htmlFor="">قيمة الايداع : </label>
+                        <label htmlFor="">قيمة الارسال : </label>
                         <input type="number" value={operationVal} placeholder="ادخل قيمة العميلة" onChange={(e) => setOperationVal(e.target.value)}/>
                     </div>
                     <div className="inputContainer">
                         <label htmlFor="">قيمة الربح : </label>
-                        <input type="number" value={profit} placeholder="ادخل قيمة الربح" onChange={(e) => setProfit(e.target.value)}/>
+                        <input type="number" value={commation} placeholder="ادخل قيمة الربح" onChange={(e) => setCommation(e.target.value)}/>
                     </div>
                     <button className={styles.walletBtn} onClick={handleCashAdd}>اكمل العملية</button>
                 </div>

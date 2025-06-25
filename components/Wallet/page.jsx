@@ -8,9 +8,10 @@ import { addDoc, collection, doc, getDocs, onSnapshot, query, updateDoc, where }
 function Wallet({openWallet, setOpenWallet}) {
     const [phone, setPhone] = useState('')
     const [operationVal, setOperationVal] = useState('')
-    const [profit, setProfit] = useState('')
+    const [commation, setCommation] = useState('')
     const [userEmail, setUserEmail] = useState('')
     const [phoneNumbers, setPhoneNumbers] = useState([])
+    
 
     useEffect(() => {
         if(typeof window !== "undefined") {
@@ -37,12 +38,13 @@ function Wallet({openWallet, setOpenWallet}) {
                 const userDoc = querySnapshot.docs[0]
                 const userData = userDoc.data()
                 const userRef = doc(db, 'users', userDoc.id)
-                await addDoc(collection(db, 'operations'), {
-                    phone,
+                await addDoc(collection(db, 'reports'), {
                     userEmail,
-                    profit,
+                    commation, 
                     operationVal,
-                    type: 'سحب',
+                    phone,
+                    type: 'استلام',
+                    date: new Date().toISOString().split("T")[0]
                 })
                 await updateDoc(userRef, {
                     wallet: Number(userData.wallet) + Number(operationVal),
@@ -61,7 +63,7 @@ function Wallet({openWallet, setOpenWallet}) {
                 }
                 alert('تم اتمام العملية بنجاح')
                 setPhone('')
-                setProfit('')
+                setCommation('')
                 setOperationVal('')
             }
         }
@@ -85,12 +87,12 @@ function Wallet({openWallet, setOpenWallet}) {
                     </datalist>
                     </div>
                     <div className="inputContainer">
-                        <label htmlFor="">قيمة السحب : </label>
+                        <label htmlFor="">قيمة استلام : </label>
                         <input value={operationVal} placeholder="ادخل قيمة العميلة" onChange={(e) => setOperationVal(e.target.value)}/>
                     </div>
                     <div className="inputContainer">
                         <label htmlFor="">قيمة الربح : </label>
-                        <input type="number" value={profit} placeholder="ادخل قيمة الربح" onChange={(e) => setProfit(e.target.value)}/>
+                        <input type="number" value={commation} placeholder="ادخل قيمة الربح" onChange={(e) => setCommation(e.target.value)}/>
                     </div>
                     <button className={styles.walletBtn} onClick={handleWalletAdd}>اكمل العملية</button>
                 </div>

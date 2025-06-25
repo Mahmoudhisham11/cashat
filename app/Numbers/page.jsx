@@ -108,7 +108,6 @@ function Numbers() {
                                         <strong>المتبقي على الليمت : 
                                         <p>{60000 - (Number(number.withdraw || 0) + Number(number.deposit || 0))}</p>
                                         </strong>
-
                                     </div>
                                 </div>
                             )
