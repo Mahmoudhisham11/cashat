@@ -126,6 +126,10 @@ function Image() {
                 wallet: updatedWallet,
                 deposit: updatedDeposit
             });
+            alert('تم اتمام العملية بنجاح')
+            if(typeof window !== 'undefined') {
+                window.location.reload()
+            }
         }
     };
 
