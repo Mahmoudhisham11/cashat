@@ -1,104 +1,198 @@
 'use client';
 import { useEffect, useState } from "react";
 import styles from "./styles.module.css";
-import { IoIosCloseCircle } from "react-icons/io";
+import { MdOutlineKeyboardArrowLeft } from "react-icons/md";
 import { db } from "../../app/firebase";
-import { addDoc, collection, doc, getDocs, onSnapshot, query, updateDoc, where } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  doc,
+  getDocs,
+  onSnapshot,
+  query,
+  updateDoc,
+  where,
+} from "firebase/firestore";
 
-function Wallet({openWallet, setOpenWallet}) {
-    const [phone, setPhone] = useState('')
-    const [operationVal, setOperationVal] = useState('')
-    const [commation, setCommation] = useState('')
-    const [userEmail, setUserEmail] = useState('')
-    const [phoneNumbers, setPhoneNumbers] = useState([])
-    
+function Wallet({ openWallet, setOpenWallet }) {
+  const [phone, setPhone] = useState("");
+  const [operationVal, setOperationVal] = useState("");
+  const [commation, setCommation] = useState("");
+  const [userEmail, setUserEmail] = useState("");
+  const [phoneNumbers, setPhoneNumbers] = useState([]);
+  const [limit, setLimit] = useState("");
+  const [amount, setAmount] = useState("");
 
-    useEffect(() => {
-        if(typeof window !== "undefined") {
-            const stroageEamil = localStorage.getItem('email')
-            if(stroageEamil) {
-                setUserEmail(stroageEamil)
-            }
-        }
-        const q = query(collection(db, 'numbers'), where('userEmail', '==', userEmail))
-        const unSubscripe = onSnapshot(q, (querySnapshot) => {
-            const numbersArray = []
-            querySnapshot.forEach((doc) => {
-                numbersArray.push({...doc.data(), id: doc.id})
-            })
-            setPhoneNumbers(numbersArray)    
-        })
-        return () => unSubscripe()
-    } ,[userEmail])
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storageEmail = localStorage.getItem("email");
+      if (storageEmail) {
+        setUserEmail(storageEmail);
+      }
+    }
+  }, []);
 
-    const handleWalletAdd = async() => {
-            const q = query(collection(db, 'users'), where('email', '==', userEmail))
-            const querySnapshot = await getDocs(q)
-            if(!querySnapshot.empty) {
-                const userDoc = querySnapshot.docs[0]
-                const userData = userDoc.data()
-                const userRef = doc(db, 'users', userDoc.id)
-                await addDoc(collection(db, 'reports'), {
-                    userEmail,
-                    commation, 
-                    operationVal,
-                    phone,
-                    type: 'استلام',
-                    date: new Date().toISOString().split("T")[0]
-                })
-                await updateDoc(userRef, {
-                    wallet: Number(userData.wallet) + Number(operationVal),
-                    cash: Number(userData.cash) - Number(operationVal)
-                })
-                const nq = query(collection(db, 'numbers'), where('phone', '==', phone), where('userEmail', '==', userEmail))
-                const nSnapshot = await getDocs(nq)
-                if(!nSnapshot.empty) {
-                    const numberDoc = nSnapshot.docs[0]
-                    const numberRef= doc(db, 'numbers', numberDoc.id)
-                    const numberData = numberDoc.data()
-                    await updateDoc(numberRef, {
-                        amount: Number(numberData.amount) + Number(operationVal),
-                        withdraw: Number(numberData.withdraw) + Number(operationVal)
-                    })
-                }
-                alert('تم اتمام العملية بنجاح')
-                setPhone('')
-                setCommation('')
-                setOperationVal('')
-            }
-        }
-        
+  useEffect(() => {
+    if (!userEmail) return;
 
-    return(
-        <div className={openWallet ? "shadowBox active" : "shadowBox"}>
-            <div className="box">
-                <button className={styles.closeBtn} onClick={() => setOpenWallet(false)}><IoIosCloseCircle/></button>
-                <h2>عملية استلام</h2>
-                <div className="boxForm">
-                    <div className="inputContainer">
-                        <label htmlFor="">ادخل رقم الشريحة : </label>
-                    <input type="number" list="numbers" onChange={(e) => setPhone(e.target.value)} placeholder="ابحث عن رقم المحفظة"/>
-                    <datalist id="numbers">
-                        {phoneNumbers.map(phoneNumber => {
-                            return(
-                                <option key={phoneNumber.id} value={phoneNumber.phone}/>
-                            )
-                        })}
-                    </datalist>
-                    </div>
-                    <div className="inputContainer">
-                        <label htmlFor="">قيمة استلام : </label>
-                        <input value={operationVal} placeholder="ادخل قيمة العميلة" onChange={(e) => setOperationVal(e.target.value)}/>
-                    </div>
-                    <div className="inputContainer">
-                        <label htmlFor="">قيمة الربح : </label>
-                        <input type="number" value={commation} placeholder="ادخل قيمة الربح" onChange={(e) => setCommation(e.target.value)}/>
-                    </div>
-                    <button className={styles.walletBtn} onClick={handleWalletAdd}>اكمل العملية</button>
-                </div>
+    const q = query(collection(db, "numbers"), where("userEmail", "==", userEmail));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const numbersArray = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setPhoneNumbers(numbersArray);
+    });
+
+    return () => unsubscribe();
+  }, [userEmail]);
+
+  useEffect(() => {
+    if (phone && phoneNumbers.length > 0) {
+      const selected = phoneNumbers.find((item) => item.phone === phone);
+      if (selected) {
+        setLimit(selected.limit);
+        setAmount(selected.amount);
+      }
+    }
+  }, [phone, phoneNumbers]);
+
+  const handleWalletAdd = async () => {
+    if (!phone || phone.trim() === "") {
+      alert("من فضلك اختر رقم الشريحة");
+      return;
+    }
+
+    if (!operationVal || isNaN(Number(operationVal))) {
+      alert("قيمة العملية غير صالحة");
+      return;
+    }
+
+    if (!commation || isNaN(Number(commation))) {
+      alert("قيمة العمولة غير صالحة");
+      return;
+    }
+
+    const q = query(collection(db, "users"), where("email", "==", userEmail));
+    const querySnapshot = await getDocs(q);
+    if (!querySnapshot.empty) {
+      const userDoc = querySnapshot.docs[0];
+      const userData = userDoc.data();
+      const userRef = doc(db, "users", userDoc.id);
+
+      await addDoc(collection(db, "operations"), {
+        userEmail,
+        commation,
+        operationVal,
+        phone,
+        type: "استلام",
+        date: new Date().toISOString().split("T")[0],
+      });
+
+      await updateDoc(userRef, {
+        wallet: Number(userData.wallet) + Number(operationVal),
+        cash: Number(userData.cash) - Number(operationVal),
+      });
+
+      const nq = query(
+        collection(db, "numbers"),
+        where("phone", "==", phone),
+        where("userEmail", "==", userEmail)
+      );
+      const nSnapshot = await getDocs(nq);
+      if (!nSnapshot.empty) {
+        const numberDoc = nSnapshot.docs[0];
+        const numberRef = doc(db, "numbers", numberDoc.id);
+        const numberData = numberDoc.data();
+        await updateDoc(numberRef, {
+          amount: Number(numberData.amount) + Number(operationVal),
+          withdraw: Number(numberData.withdraw) + Number(operationVal),
+        });
+      }
+
+      alert("تم اتمام العملية بنجاح");
+      setPhone("");
+      setCommation("");
+      setOperationVal("");
+    }
+  };
+
+  return (
+    <div className={openWallet ? "operationContainer active" : "operationContainer"}>
+      <div className="conatainerHead">
+        <button className={styles.closeBtn} onClick={() => setOpenWallet(false)}>
+          <MdOutlineKeyboardArrowLeft />
+        </button>
+        <h2>عملية استلام</h2>
+      </div>
+      <div className="operationBox">
+        <div className="operationsContent">
+          <div className="inputContainer">
+            <label>ادخل رقم الشريحة :</label>
+            <input
+              type="number"
+              list="numbers"
+              onChange={(e) => setPhone(e.target.value)}
+              value={phone}
+              placeholder="ابحث عن رقم المحفظة"
+            />
+            <datalist id="numbers">
+              {phoneNumbers.map((item) => (
+                <option key={item.id} value={item.phone} />
+              ))}
+            </datalist>
+          </div>
+          <div className="amounts">
+            <div className="inputContainer">
+              <label>المبلغ :</label>
+              <input
+                type="number"
+                value={operationVal}
+                placeholder="0"
+                onChange={(e) => setOperationVal(e.target.value)}
+              />
             </div>
+            <div className="inputContainer">
+              <label>العمولة:</label>
+              <input
+                type="number"
+                value={commation}
+                placeholder="0"
+                onChange={(e) => setCommation(e.target.value)}
+              />
+            </div>
+            <div className="inputContainer">
+              <label>الصافي :</label>
+              <input
+                type="number"
+                value={Number(operationVal) - Number(commation)}
+                placeholder="0"
+                disabled
+                readOnly
+              />
+            </div>
+          </div>
+          <div className="amounts">
+            <div className="inputContainer">
+              <label>الليمت المتاح :</label>
+              <input
+                type="number"
+                value={Number(limit) - Number(amount)}
+                placeholder="0"
+                disabled
+                readOnly
+              />
+            </div>
+            <div className="inputContainer">
+              <label>الرصيد :</label>
+              <input type="number" value={amount} placeholder="0" disabled readOnly />
+            </div>
+          </div>
         </div>
-    )
+        <button className="operationBtn" onClick={handleWalletAdd}>اكمل العملية</button>
+      </div>
+    </div>
+  );
 }
 
 export default Wallet;

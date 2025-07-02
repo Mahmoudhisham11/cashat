@@ -1,75 +1,78 @@
 .numbersContainer {
     width: 100%;
     height: 100vh;
-    background-color: var(--main-color);
-}
-.boxContainer {
-    background-color: transparent;
-    width: 100%;
-    position: absolute;
-    top: 118px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-.box {
-    width: 80%;
-    height: 100px;
-    border-radius: 8px;
-    box-shadow: 0 0 15px rgba(0, 0, 0, .5);
-    background-color: white;
-    display: flex;
-    justify-content: start;
-    align-items: start;
-    flex-direction: column;
-    gap: 10px;
-    padding: 0 2%;
-}
-.box p {
-    font-size: 20px;
-    color: rgba(0, 0, 0, .5);
-}
-.inputDiv {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-.inputDiv input {
-    width: 80%;
-    border-radius: 28px;
-    border: 1px solid var(--black-color);
-    outline: none;
-    padding: 5px;
-}
-.inputDiv button {
-    width: 15%;
-    background-color: var(--black-color);
-    color: whitesmoke;
-    font: 20px;
-    border: none;
-    padding: 7px;
-    border-radius: 6px;
-    cursor: pointer;
-}
-.container {
-    width: 100%;
-    height: 100vh;
-    background-color: white;
-    border-radius: 28px 28px 0 0;
+    background-color: var(--bg-color);
 }
 .content {
     width: 100%;
-    padding: 120px 2%;
+    padding: 30px 2%;
     display: flex;
     justify-content: start;
     align-items: start;
     flex-direction: column;
     gap: 15px;
 }
+.btnsContainer {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+.btnsContainer button {
+    width: fit-content;
+    height: fit-content;
+    text-align: center;
+    padding: 7px;
+    background-color: var(--gray-color);
+    color: var(--text-color);
+    border: none;
+    border-radius: 8px;
+    font-size: 20px;
+    cursor: pointer;
+    transition: .3s;
+}
+.btnsContainer button.active {
+    background-color: var(--main-color);
+    color: white    ;
+}
+.cardInfo {
+    width: 100%;
+    height: calc(100vh - 230px);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-direction: column;
+    gap: 10px;
+}
+.info {
+    width: 100%;
+}
+.addBtn {
+    width: 100%;
+    height: 40px;
+    font-size: 20px;
+    border: none;
+    border-radius: 8px;
+    background-color: var(--main-color);
+    color: white;
+    cursor: pointer;
+}
+.cardContent {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 15px;
+}
+.numbeInfo {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
 .numDiv {
     width: 100%;
-    height: 280px;
+    height: 60px;
     background-color: var(--gray-color);
     padding: 5px;
     border-radius: 8px;
@@ -77,7 +80,11 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
+    overflow: hidden;
     transition: .3s;
+}
+.numDiv.open {
+    height: 280px;
 }
 .divHeader {
     display: flex;
@@ -136,6 +143,9 @@
     justify-content: center;
     align-items: center;
 }
+.qrContainer h2 {
+    color: var(--black-color);
+}
 .qrContainer button{
     position: fixed;
     top: 20px;
@@ -147,11 +157,6 @@
     cursor: pointer;
 }
 
-.tableContainer {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-}
 
 @media(max-width: 767px) {
     .boxContainer {

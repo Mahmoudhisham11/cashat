@@ -23,10 +23,6 @@ function Nav() {
                 <span><TbReportSearch/></span>
                 <span>التقارير</span>
             </Link>
-            <Link href={"/"} className={styles.navLink}>
-                <span><RiHome5Line/></span>
-                <span>الرئيسية</span>
-            </Link>
             {userEmail === 'mahmoudhisham@gmail.com' ?             
             <Link href={"/image"} className={styles.navLink}>
                 <span><FaCameraRetro/></span>

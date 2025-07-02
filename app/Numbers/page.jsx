@@ -2,7 +2,7 @@
 import styles from "./styles.module.css";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { IoIosArrowDropleftCircle } from "react-icons/io";
+import { MdOutlineKeyboardArrowLeft } from "react-icons/md";
 import { HiQrcode } from "react-icons/hi";
 import { FaTrashAlt } from "react-icons/fa";
 import { IoReloadOutline } from "react-icons/io5";
@@ -12,10 +12,17 @@ import QRCode from "react-qr-code";
 
 function Numbers() {
     const [phone, setPhone] = useState('')
+    const [name, setName] = useState('')
+    const [idNumber, setIdNumber] = useState('')
+    const [amount, setAmount] = useState('')
+    const [limit, setLimit] = useState('')
     const [userEmail, setUserEmail] = useState('')
     const [qrNumber, setQrNumber] = useState('')
+    const [active, setActive] = useState(0)
+    const [openCard, setOpenCard] = useState('')
     const [openQr, setOpenQr] = useState(false)
     const [numbers, setNumbers] = useState([])
+    const btns = ['اضف خط جديد','كل الخطوط']
 
     useEffect(() => {
         if(typeof window !== "undefined") {
@@ -37,13 +44,18 @@ function Numbers() {
         if(phone !== "") {
             await addDoc(collection(db, 'numbers'), {
                 phone,
+                name,
+                idNumber,
+                amount,
+                limit,
                 userEmail,
-                amount: 0,
-                withdraw: 0,
-                deposit: 0
             })
             alert('تم اضافة الرقم بنجاح')
             setPhone('')
+            setName('')
+            setIdNumber('')
+            setAmount('')
+            setLimit('')
         }
     }
 
@@ -55,59 +67,73 @@ function Numbers() {
         setQrNumber(phone)
         setOpenQr(true)
     }
-    const handleLimit = async(id, withdraw, deposit) => {
-        await updateDoc(doc(db, 'numbers', id), {
-            withdraw: 0,
-            deposit: 0
-        })
-        alert('الليمت الحالي 0')
-    }
 
     return(
         <div className="main">
             <div className={openQr ? `${styles.qrContainer} ${styles.active}` : `${styles.qrContainer}`}>
-                <button onClick={() => setOpenQr(false)}><IoIosArrowDropleftCircle/></button>
+                <button onClick={() => setOpenQr(false)}><MdOutlineKeyboardArrowLeft/></button>
                 <QRCode value={qrNumber} size={200} />
                 <h2>{qrNumber}</h2>
             </div>
             <div className={styles.numbersContainer}>
-                <div className="title">
+                <div className="header">
                     <h2>الارقام و الليمت</h2>
-                    <Link href={"/"} className="titleLink"><IoIosArrowDropleftCircle /></Link>
+                    <Link href={"/"} className="headerLink"><MdOutlineKeyboardArrowLeft /></Link>
                 </div>
-                <div className={styles.container}>
-                    <div className={styles.boxContainer}>
-                        <div className={styles.box}>
-                            <p>اضف رقم المحفظة</p>
-                            <div className={styles.inputDiv}>
-                                <input type="number" value={phone} placeholder="اضف رقم المحفظة" onChange={(e) => setPhone(e.target.value)}/>
-                                <button onClick={handelAddNumber}>اضف</button>
+                <div className={styles.content}>
+                    <div className={styles.btnsContainer}>
+                        {btns.map((btn, index) => {
+                            return(
+                                <button className={active === index ? `${styles.active}` : ``} onClick={() => setActive(index)} key={index}>{btn}</button>
+                            )
+                        })}
+                    </div>
+                    <div className={styles.cardInfo} style={{display: active === 0 ? 'flex' : 'none'}}>
+                        <div className={styles.info}>
+                            <div className="inputContainer">
+                                <label>رقم الخط : </label>
+                                <input type="number" value={phone} placeholder="اضف رقم الخط" onChange={(e) => setPhone(e.target.value)}/>
+                            </div>
+                            <div className="amounts">
+                                <div className="inputContainer">
+                                    <label>اسم المالك :</label>
+                                    <input type="text" value={name} placeholder="اضف اسم مالك الخط" onChange={(e) => setName(e.target.value)}/>
+                                </div>
+                                <div className="inputContainer">
+                                    <label>الرقم القومي :</label>
+                                    <input type="number" value={idNumber} placeholder="اضف الرقم القومي" onChange={(e) => setIdNumber(e.target.value)}/>
+                                </div>
+                            </div>
+                            <div className="amounts">
+                                <div className="inputContainer">
+                                    <label> رصيد الخط :</label>
+                                    <input type="number" value={amount} placeholder="0" onChange={(e) => setAmount(e.target.value)}/>
+                                </div>
+                                <div className="inputContainer">
+                                    <label> الليمت :</label>
+                                    <input type="number" value={limit} placeholder="0" onChange={(e) => setLimit(e.target.value)}/>
+                                </div>
                             </div>
                         </div>
+                        <button className={styles.addBtn} onClick={handelAddNumber}>اكمل العملية</button>
                     </div>
-                    <div className={styles.content}>
-                        {numbers.map(number => {
+                    <div className={styles.cardContent} style={{display: active == 1 ? 'flex' : 'none'}}>
+                        {numbers.map((number, index) => {
                             return(
-                                <div key={number.id} className={styles.numDiv}>
+                                <div key={number.id} onClick={() => setOpenCard(openCard === index ? null : index)} className={openCard === index ? `${styles.numDiv} ${styles.open}` : `${styles.numDiv}`}>
                                     <div className={styles.divHeader}>
                                         <h2 style={{color: Number(number.withdraw) + Number(number.deposit) >= 50000 ? 'red' : ''}}>{number.phone}</h2>
                                         <div className={styles.btns}>
                                             <button onClick={() => handleQr(number.phone)}><HiQrcode/></button>
-                                            <button onClick={() => handleLimit(number.id, number.withdraw, number.deposit,)}><IoReloadOutline/></button>
                                             <button onClick={() => handleDelet(number.id)}><FaTrashAlt/></button>
                                         </div>
                                     </div>
                                     <hr />
                                     <div className={styles.divFooter}>
-                                        <strong>قيمة المحفظة : <p>{Number(number.amount) || 0}</p></strong>
-                                        <strong>قيمة عمليات الاستلام : <p>{Number(number.withdraw) || 0}</p></strong>
-                                        <strong>قيمة عمليات السحب : <p>{Number(number.deposit) || 0}</p></strong>
-                                        <strong>قيمة الليمت : 
-                                        <p>{Number(number.withdraw || 0) + Number(number.deposit || 0)}</p>
-                                        </strong>
-                                        <strong>المتبقي على الليمت : 
-                                        <p>{60000 - (Number(number.withdraw || 0) + Number(number.deposit || 0))}</p>
-                                        </strong>
+                                        <strong>اسم المالك : {number.name}</strong>
+                                        <strong>الرقم القومي: {number.idNumber}</strong>
+                                        <strong> رصيد الخط: {number.amount}</strong>
+                                        <strong>الليمت المتاح: {Number(number.limit) - Number(number.amount)}</strong>
                                     </div>
                                 </div>
                             )

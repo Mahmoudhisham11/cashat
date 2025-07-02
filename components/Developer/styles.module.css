@@ -14,7 +14,7 @@
     left: 15px;
     top: 15px;
     background-color: transparent;
-    color: black;
+    color: var(--text-color);
     font-size: 20px;
     border: none;
     cursor: pointer;

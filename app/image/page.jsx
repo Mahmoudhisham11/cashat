@@ -3,7 +3,7 @@ import { useState } from 'react';
 import Tesseract from 'tesseract.js';
 import styles from "./styles.module.css";
 import Link from 'next/link';
-import { IoIosArrowDropleftCircle } from "react-icons/io";
+import { MdOutlineKeyboardArrowLeft } from "react-icons/md";
 import { addDoc, collection, doc, getDocs, query, updateDoc, where } from 'firebase/firestore';
 import { db } from '../firebase';
 
@@ -11,7 +11,6 @@ function Image() {
     const [image, setImage] = useState(null);
     const [text, setText] = useState('');
     const [loading, setLoading] = useState(false);
-
     const [type, setType] = useState('');
     const [operationVal, setOperationVal] = useState('');
     const [date, setDate] = useState('');
@@ -29,11 +28,9 @@ function Image() {
         });
 
         const ocrText = result.data.text;
-        console.log("🔍 النص المقروء:", ocrText);
         setText(ocrText);
         setLoading(false);
 
-        // نوع العملية
         let originalType = "غير معروف";
         if (ocrText.includes("تم استلام")) {
             originalType = "استلام";
@@ -44,21 +41,16 @@ function Image() {
         }
         setType(originalType);
 
-        // القيمة
         const valueMatch = ocrText.match(/(?:مبلغ|قيمته|قيمة)?\s?(\d+(\.\d+)?)(?=\s?جنيه)/);
         let value = valueMatch ? valueMatch[1] : '';
-        let finalValue = '';
         if (value) {
             const floatVal = parseFloat(value);
-            finalValue = floatVal % 1 === 0 ? floatVal.toFixed(0) : floatVal.toFixed(2);
+            const finalValue = floatVal % 1 === 0 ? floatVal.toFixed(0) : floatVal.toFixed(2);
             setOperationVal(finalValue);
-
-            // حساب العمولة 1% وتقريبها
             const comm = Math.round(floatVal * 0.01);
             setCommation(comm.toString());
         }
 
-        // التاريخ
         const dateMatch = ocrText.match(/(\d{2}-\d{2}-\d{4})/);
         const shortDateMatch = ocrText.match(/(\d{2}-\d{2}-\d{2})/);
         let finalDate = dateMatch?.[1] || null;
@@ -71,7 +63,6 @@ function Image() {
         }
         setDate(finalDate);
 
-        // رقم الخط
         let extractedPhone = "غير معروف";
         const pattern1 = ocrText.match(/(?:بإسم|:|الى|إلى|من)\s*(01[0-9\s\-]{8,})/);
         const pattern2 = ocrText.match(/01[0-9\s\-]{8,}/);
@@ -92,53 +83,68 @@ function Image() {
         const userEmail = localStorage.getItem('email');
         const amountNumber = parseFloat(operationVal);
 
-        // إضافة التقرير
-        await addDoc(collection(db, 'reports'), {
-            type,
-            phone,
-            operationVal,
-            commation,
-            date,
-            userEmail
-        });
-
-        // تحديث البيانات في numbers
-        const q = query(collection(db, 'numbers'), where('phone', '==', phone), where('userEmail', '==', userEmail));
-        const querySnapshot = await getDocs(q);
-
-        if (!querySnapshot.empty) {
-            const numberDoc = querySnapshot.docs[0];
-            const numberRef = doc(db, 'numbers', numberDoc.id);
-            const numberData = numberDoc.data();
-
-            let updatedWallet = numberData.wallet || 0;
-            let updatedDeposit = numberData.deposit || 0;
-
-            if (type === "ارسال") {
-                updatedWallet -= amountNumber;
-                updatedDeposit += amountNumber;
-            } else if (type === "استلام") {
-                updatedWallet += amountNumber;
-                updatedDeposit -= amountNumber;
-            }
-
-            await updateDoc(numberRef, {
-                wallet: updatedWallet,
-                deposit: updatedDeposit
+        try {
+            await addDoc(collection(db, 'operations'), {
+                type,
+                phone,
+                operationVal,
+                commation,
+                date,
+                userEmail
             });
-            alert('تم اتمام العملية بنجاح')
-            if(typeof window !== 'undefined') {
-                window.location.reload()
+
+            const q = query(
+                collection(db, 'numbers'),
+                where('phone', '==', phone),
+                where('userEmail', '==', userEmail)
+            );
+            const querySnapshot = await getDocs(q);
+
+            if (!querySnapshot.empty) {
+                const numberDoc = querySnapshot.docs[0];
+                const numberRef = doc(db, 'numbers', numberDoc.id);
+                const numberData = numberDoc.data();
+
+                let updatedWallet = numberData.wallet || 0;
+                let updatedDeposit = numberData.deposit || 0;
+
+                if (type === "ارسال") {
+                    updatedWallet -= amountNumber;
+                    updatedDeposit += amountNumber;
+                } else if (type === "استلام") {
+                    updatedWallet += amountNumber;
+                    updatedDeposit -= amountNumber;
+                }
+
+                await updateDoc(numberRef, {
+                    wallet: updatedWallet,
+                    deposit: updatedDeposit
+                });
             }
+
+            alert('تم اتمام العملية بنجاح');
+
+            // تصفير البيانات بعد العملية
+            setImage(null);
+            setText('');
+            setType('');
+            setOperationVal('');
+            setCommation('');
+            setDate('');
+            setPhone('');
+
+        } catch (error) {
+            console.error("حدث خطأ أثناء تنفيذ العملية:", error);
+            alert('حدث خطأ أثناء تنفيذ العملية');
         }
     };
 
     return (
         <div className="main">
             <div className={styles.image}>
-                <div className="title">
+                <div className="header">
                     <h2>تحميل صورة العميلة</h2>
-                    <Link href={"/"} className="titleLink"><IoIosArrowDropleftCircle /></Link>
+                    <Link href={"/"} className="headerLink"><MdOutlineKeyboardArrowLeft /></Link>
                 </div>
                 <div className={styles.container}>
                     <div className={styles.imageContainer}>

@@ -1,35 +1,30 @@
 .reportsContainer {
     width: 100%;
     height: 100vh;
-    background-color: var(--main-color);
+    background-color: var(--bg-color);
 }
 .inputContainer {
     width: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
-    padding-bottom: 30px;
+    padding: 30px 2%;
 }
 .inputContainer input {
-    width: 80%;
+    width: 100%;
     height: 60px;
     background-color: transparent;
     border: none;
     outline: none;
     font-size: 18px;
-    background-color: rgba(228, 228, 228, 0.603);
+    background-color: var(--gray-color);
+    color: var(--text-color);
     border-radius: 8px;
     padding: 5px;
 }
-.container {
+.contentTitle {
     width: 100%;
-    height: 100vh;
-    background-color: white;
-    border-radius: 28px 28px 0 0;
-}
-.containerTitle {
-    width: 100%;
-    padding: 20px 2%;
+    padding: 0 2%;
 }
 .content {
     width: 100%;
@@ -52,8 +47,6 @@
 }
 .card.active {
     height: 250px;
-    background-color: var(--main-color);
-    color: white;
 }
 .cardHead {
     width: 100%;

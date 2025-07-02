@@ -3,7 +3,7 @@ import { collection, onSnapshot, query, where } from "firebase/firestore";
 import styles from "./styles.module.css";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { IoIosArrowDropleftCircle } from "react-icons/io";
+import { MdOutlineKeyboardArrowLeft } from "react-icons/md";
 import { IoIosArrowDown } from "react-icons/io";
 import { db } from "../firebase";
 
@@ -41,16 +41,15 @@ function Reports() {
     return(
         <div className="main">
             <div className={styles.reportsContainer}>
-                <div className="title">
+                <div className="header">
                     <h2>التقارير</h2>
-                    <Link href={"/"} className="titleLink"><IoIosArrowDropleftCircle /></Link>
+                    <Link href={"/"} className="headerLink"><MdOutlineKeyboardArrowLeft /></Link>
                 </div>
                 <div className={styles.inputContainer}>
                         <input type="date" onChange={(e) => setDate(e.target.value)}/>
                 </div>
-                <div className={styles.container}>
-                    <div className={styles.content}>
-                        <div className={styles.containerTitle}>
+                <div className={styles.content}>
+                        <div className={styles.contentTitle}>
                             <h2>اجمالي الارباح : {total} جنية</h2>
                         </div>
                         {reports.map((report, index) => {
@@ -78,7 +77,6 @@ function Reports() {
                                 </div>
                             )
                         })}
-                    </div>
                 </div>
             </div>
         </div>

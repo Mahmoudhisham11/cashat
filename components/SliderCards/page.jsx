@@ -13,7 +13,6 @@ import { collection, onSnapshot, query, where } from "firebase/firestore";
 
 function SliderCards({wallet, cash}) {
     const [userEmail, setUserEamil] = useState('')
-    const [total, setTotla] = useState('')
 
     useEffect(() => {
         if(typeof window !== "undefined") {
@@ -22,16 +21,7 @@ function SliderCards({wallet, cash}) {
                 setUserEamil(storageEmail)
             }
         }
-        const q = query(collection(db, 'operations'), where('userEmail', '==', userEmail))
-        const onSubscribe = onSnapshot(q, (querySnapshot) => {
-            let subTotal = 0
-            querySnapshot.forEach((doc) => {
-                subTotal += Number(doc.data().profit || 0)
-            })
-            setTotla(subTotal)
-        })
-        return () => onSubscribe()
-    }, [userEmail])
+    }, [])
 
     return(
         <div className={styles.cards}>
@@ -68,17 +58,6 @@ function SliderCards({wallet, cash}) {
                             <div className={styles.cardBody}>
                                 <p>رصيد الكاش</p>
                                 <strong>{userEmail === 'abdulrhmansalahmohamed@gmail.com' ? 0 : <>{cash}</>} جنية</strong>
-                            </div>
-                        </div>
-                    </SwiperSlide>
-                    <SwiperSlide>
-                        <div className={styles.card}>
-                            <div className={styles.cardHead}>
-                                <p><GiMoneyStack/></p>
-                            </div>
-                            <div className={styles.cardBody}>
-                                <p>الربح اليومي</p>
-                                <strong>{userEmail === 'abdulrhmansalahmohamed@gmail.com' ? 0 : <>{total}</>} جنية</strong>
                             </div>
                         </div>
                     </SwiperSlide>

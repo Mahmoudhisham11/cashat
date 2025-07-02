@@ -1,93 +1,147 @@
 .main {
     width: 100%;
-    height: 100vh;
-    background-color: var(--main-color);
+    min-height: 100vh;
+    padding: 0 2%;
+    padding-bottom: 100px;
 }
 .title {
     width: 100%;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 30px 2%;
-    padding-bottom: 100px;
+    padding: 30px 0;
 }
-.text p {
-    color: rgba(255, 255, 255, .5);
-    font-size: 20px;
+.text {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+}
+.avatar {
+    width: 60px;
+    height: 60px;
 }
 .text h2 {
-    color: white;
+    color: var(--text-color);
     font-size: 30px;
     line-height: 1;
 }
-.title button {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: none;
-    background-color: rgba(255, 255, 255, .5);
-    font-size: 25px;
-    color: white;
+.balanceContainer {
+    width: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
-    cursor: pointer;
 }
-.container {
+.balanceCard {
     width: 100%;
-    min-height: calc(100vh - 130px);
-    background-color: white;
-    border-radius: 28px 28px 0 0;
-    padding-bottom: 50px;
-}
-.cardContainer {
-    width: 100%;
-    position: absolute;
-    top: 130px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: transparent;
-}
-.headerCard {
-    width: 80%;
     height: fit-content;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 0 15px rgba(0, 0, 0, .5);
-    padding: 15px;
+    background-color: var(--card-bg);
+    color: var(--card-text);
+    border-radius: 28px;
+    padding: 15px 2%;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
 }
-.top p {
-    font-size: 14px;
-    color: rgba(0, 0, 0, .5);
-}
-.btsContainer {
+.balanceBtns {
     width: 100%;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 15px;
 }
-.btsContainer button {
-    width: 35px;
-    height: 35px;
-    background-color: var(--main-color);
-    color: white;
-    font-size: 20px;
-    border-radius: 50%;
-    border: none;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-}
-.btnsContent {
+.balanceBtns button {
+    background-color: transparent;
     display: flex;
     justify-content: center;
     align-items: center;
     flex-direction: column;
-    gap: 3px;
+    gap: 10px;
+    border: none;
+    color: var(--card-text);
+    font-size: 20px;
+    cursor: pointer;
 }
-.btnsContent p {
-    color: rgba(0, 0, 0, .5);
+.content {
+    width: 100%;
+    padding-top: 20px;
+}
+.contentTitle {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.contentTitle h2 {
+    font-size: 30px;
+}
+.contentTitle button {
+    background-color: transparent;
+    color: var(--text-color);
+    font-size: 25px;
+    border: none;
+    cursor: pointer;
+}
+.operations {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 15px;
+    padding: 30px 0;
+}
+.card {
+    width: 100%;
+    height: 70px;
+    background-color: var(--gray-color);
+    border-radius: 8px;
+    padding: 10px 2%;
+    overflow: hidden;
+    transition: .3s;
+    cursor: pointer;
+}
+.card.active {
+    height: 250px;
+}
+.cardHead {
+    width: 100%;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.cardHead button {
+    background-color: transparent;
+    font-size: 20px;
+    color: red;
+    border: none;
+    cursor: pointer;
+}
+.cardBody {
+    padding-top: 15px;
+    display: flex;
+    justify-content: start;
+    align-items: start;
+    flex-direction: column;
+    gap: 10px;
+}
+.cardBody p {
+    font-size: 20px;
+}
+
+
+@media(max-width: 767px) {
+    .title h2 {
+        font-size: 20px;
+    }
+    .text {
+        gap: 10px;
+    }
+    .avatar {
+        width: 50px;
+        height: 50px;
+    }
+    .contentTitle h2 {
+        font-size: 20px;
+    }   
 }
