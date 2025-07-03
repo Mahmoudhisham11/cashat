@@ -57,65 +57,65 @@ function Wallet({ openWallet, setOpenWallet }) {
     }
   }, [phone, phoneNumbers]);
 
-  const handleWalletAdd = async () => {
-    if (!phone || phone.trim() === "") {
-      alert("من فضلك اختر رقم الشريحة");
-      return;
-    }
-
-    if (!operationVal || isNaN(Number(operationVal))) {
-      alert("قيمة العملية غير صالحة");
-      return;
-    }
-
-    if (!commation || isNaN(Number(commation))) {
-      alert("قيمة العمولة غير صالحة");
-      return;
-    }
-
-    const q = query(collection(db, "users"), where("email", "==", userEmail));
-    const querySnapshot = await getDocs(q);
-    if (!querySnapshot.empty) {
-      const userDoc = querySnapshot.docs[0];
-      const userData = userDoc.data();
-      const userRef = doc(db, "users", userDoc.id);
-
-      await addDoc(collection(db, "operations"), {
-        userEmail,
-        commation,
-        operationVal,
-        phone,
-        type: "استلام",
-        date: new Date().toISOString().split("T")[0],
-      });
-
-      await updateDoc(userRef, {
-        wallet: Number(userData.wallet) + Number(operationVal),
-        cash: Number(userData.cash) - Number(operationVal),
-      });
-
-      const nq = query(
-        collection(db, "numbers"),
-        where("phone", "==", phone),
-        where("userEmail", "==", userEmail)
-      );
-      const nSnapshot = await getDocs(nq);
-      if (!nSnapshot.empty) {
-        const numberDoc = nSnapshot.docs[0];
-        const numberRef = doc(db, "numbers", numberDoc.id);
-        const numberData = numberDoc.data();
-        await updateDoc(numberRef, {
-          amount: Number(numberData.amount) + Number(operationVal),
-          withdraw: Number(numberData.withdraw) + Number(operationVal),
-        });
+    const handleWalletAdd = async () => {
+      if (!phone || phone.trim() === "") {
+        alert("من فضلك اختر رقم الشريحة");
+        return;
       }
 
-      alert("تم اتمام العملية بنجاح");
-      setPhone("");
-      setCommation("");
-      setOperationVal("");
-    }
-  };
+      if (!operationVal || isNaN(Number(operationVal))) {
+        alert("قيمة العملية غير صالحة");
+        return;
+      }
+
+      if (!commation || isNaN(Number(commation))) {
+        alert("قيمة العمولة غير صالحة");
+        return;
+      }
+
+      const q = query(collection(db, "users"), where("email", "==", userEmail));
+      const querySnapshot = await getDocs(q);
+      if (!querySnapshot.empty) {
+        const userDoc = querySnapshot.docs[0];
+        const userData = userDoc.data();
+        const userRef = doc(db, "users", userDoc.id);
+
+        await addDoc(collection(db, "operations"), {
+          userEmail,
+          commation,
+          operationVal,
+          phone,
+          type: "استلام",
+          date: new Date().toISOString().split("T")[0],
+        });
+
+        await updateDoc(userRef, {
+          wallet: Number(userData.wallet) + Number(operationVal),
+          cash: Number(userData.cash) - Number(operationVal),
+        });
+
+        const nq = query(
+          collection(db, "numbers"),
+          where("phone", "==", phone),
+          where("userEmail", "==", userEmail)
+        );
+        const nSnapshot = await getDocs(nq);
+        if (!nSnapshot.empty) {
+          const numberDoc = nSnapshot.docs[0];
+          const numberRef = doc(db, "numbers", numberDoc.id);
+          const numberData = numberDoc.data();
+          await updateDoc(numberRef, {
+            amount: Number(numberData.amount) + Number(operationVal),
+            limit: Number(numberData.limit) - Number(operationVal)
+          });
+        }
+
+        alert("تم اتمام العملية بنجاح");
+        setPhone("");
+        setCommation("");
+        setOperationVal("");
+      }
+    };
 
   return (
     <div className={openWallet ? "operationContainer active" : "operationContainer"}>

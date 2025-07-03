@@ -22,6 +22,7 @@ function Main() {
     const [userName, setUesrName] = useState('');
     const [userEmail, setUserEmail] = useState('');
     const [total, setTotal] = useState('');
+    const [profit, setProfit] = useState('')
     const [operations, setOperations] = useState([])
     const [theme, setTheme] = useState('light');
 
@@ -72,77 +73,82 @@ function Main() {
         return () => {userSubscribe(), unSubscribeOp()};
     }, [userEmail]);
 
+    useEffect(() => {
+        const subTotal = operations.reduce((acc, op) => {
+            return acc + Number(op.commation)
+        }, 0)
+        setProfit(subTotal)
+    }, [operations])
+
 
     const handelDelete = async (id) => {
-        try {
-            const opRef = doc(db, 'operations', id);
-            const opSnap = await getDoc(opRef);
+    try {
+        const opRef = doc(db, 'operations', id);
+        const opSnap = await getDoc(opRef);
 
-            if (!opSnap.exists()) {
-                alert("العملية غير موجودة");
-                return;
-            }
-
-            const operationData = opSnap.data();
-            const { phone, operationVal, type, userEmail } = operationData;
-
-            console.log("بيانات العملية:", operationData);
-
-            const nq = query(
-                collection(db, 'numbers'),
-                where('phone', '==', phone),
-                where('userEmail', '==', userEmail)
-            );
-            const nSnapshot = await getDocs(nq);
-
-            if (nSnapshot.empty) {
-                alert("لم يتم العثور على الشريحة.");
-                return;
-            }
-
-            const numberDoc = nSnapshot.docs[0];
-            const numberRef = doc(db, 'numbers', numberDoc.id);
-            const numberData = numberDoc.data();
-
-            const oldAmount = Number(numberData.amount);
-            const value = Number(operationVal);
-
-            console.log("الرصيد الحالي:", oldAmount, "قيمة العملية:", value);
-
-            if (isNaN(oldAmount) || isNaN(value)) {
-                alert("خطأ في القيم الرقمية. تأكد من صحة البيانات.");
-                return;
-            }
-
-            let newAmount;
-
-            if (type === "ارسال") {
-                newAmount = oldAmount + value;
-            } else if (type === "استلام") {
-                newAmount = oldAmount - value;
-                if (newAmount < 0) {
-                    alert("لا يمكن حذف العملية لأن الرصيد الناتج سيكون بالسالب.");
-                    return;
-                }
-            } else {
-                alert("نوع العملية غير معروف.");
-                return;
-            }
-
-            // تحديث الرصيد
-            await updateDoc(numberRef, {
-                amount: newAmount
-            });
-
-            // حذف العملية
-            await deleteDoc(opRef);
-
-            alert("✅ تم حذف العملية وتحديث الرصيد بنجاح.");
-
-        } catch (error) {
-            alert("❌ حدث خطأ أثناء حذف العملية. راجع Console لمزيد من التفاصيل.");
+        if (!opSnap.exists()) {
+        alert("العملية غير موجودة");
+        return;
         }
+
+        const operationData = opSnap.data();
+        const { phone, operationVal, type, userEmail } = operationData;
+
+        console.log("بيانات العملية:", operationData);
+
+        const nq = query(
+        collection(db, 'numbers'),
+        where('phone', '==', phone),
+        where('userEmail', '==', userEmail)
+        );
+        const nSnapshot = await getDocs(nq);
+
+        if (!nSnapshot.empty) {
+        const numberDoc = nSnapshot.docs[0];
+        const numberRef = doc(db, 'numbers', numberDoc.id);
+        const numberData = numberDoc.data();
+
+        const oldAmount = Number(numberData.amount);
+        const value = Number(operationVal);
+
+        console.log("الرصيد الحالي:", oldAmount, "قيمة العملية:", value);
+
+        if (isNaN(oldAmount) || isNaN(value)) {
+            alert("خطأ في القيم الرقمية. تأكد من صحة البيانات.");
+            return;
+        }
+
+        let newAmount;
+
+        if (type === "ارسال") {
+            newAmount = oldAmount + value;
+        } else if (type === "استلام") {
+            newAmount = oldAmount - value;
+            if (newAmount < 0) {
+            alert("لا يمكن حذف العملية لأن الرصيد الناتج سيكون بالسالب.");
+            return;
+            }
+        } else {
+            alert("نوع العملية غير معروف.");
+            return;
+        }
+
+        // تحديث الرصيد فقط لو الرقم موجود
+        await updateDoc(numberRef, {
+            amount: newAmount
+        });
+        }
+
+        // حذف العملية في كل الحالات
+        await deleteDoc(opRef);
+        alert("✅ تم حذف العملية بنجاح.");
+
+    } catch (error) {
+        console.error("❌ خطأ أثناء حذف العملية:", error);
+        alert("❌ حدث خطأ أثناء حذف العملية. راجع Console لمزيد من التفاصيل.");
+    }
     };
+
 
     const handelDeleteDay = async () => {
         const confirmDelete = window.confirm("هل أنت متأكد من تقفيل اليوم؟ سيتم نقل العمليات إلى الأرشيف ومسحها من القائمة.");
@@ -242,6 +248,9 @@ function Main() {
                 <div className={styles.contentTitle}>
                     <h2>العمليات اليومية</h2>
                     <button onClick={handelDeleteDay}><FaArchive/></button>
+                </div>
+                <div className={styles.profit}>
+                    <p>الارباح اليومية : {profit}</p>
                 </div>
                 <div className={styles.operations}>
                     {operations.map((operation, index) => {

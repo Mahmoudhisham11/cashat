@@ -28,9 +28,11 @@ function Image() {
         });
 
         const ocrText = result.data.text;
+        console.log("📄 النص المقروء:", ocrText);
         setText(ocrText);
         setLoading(false);
 
+        // نوع العملية
         let originalType = "غير معروف";
         if (ocrText.includes("تم استلام")) {
             originalType = "استلام";
@@ -41,6 +43,7 @@ function Image() {
         }
         setType(originalType);
 
+        // القيمة
         const valueMatch = ocrText.match(/(?:مبلغ|قيمته|قيمة)?\s?(\d+(\.\d+)?)(?=\s?جنيه)/);
         let value = valueMatch ? valueMatch[1] : '';
         if (value) {
@@ -51,6 +54,7 @@ function Image() {
             setCommation(comm.toString());
         }
 
+        // التاريخ
         const dateMatch = ocrText.match(/(\d{2}-\d{2}-\d{4})/);
         const shortDateMatch = ocrText.match(/(\d{2}-\d{2}-\d{2})/);
         let finalDate = dateMatch?.[1] || null;
@@ -63,19 +67,31 @@ function Image() {
         }
         setDate(finalDate);
 
+        // استخراج رقم الهاتف
         let extractedPhone = "غير معروف";
-        const pattern1 = ocrText.match(/(?:بإسم|:|الى|إلى|من)\s*(01[0-9\s\-]{8,})/);
-        const pattern2 = ocrText.match(/01[0-9\s\-]{8,}/);
-        const arabicDigitsMatch = ocrText.match(/[\u0660-\u0669]{11}/);
+        let phoneMatches = ocrText.match(/(?:\+2|002)?(01[0125][\d\s\-]{7,13})/g);
 
-        if (pattern1) {
-            extractedPhone = pattern1[1].replace(/\s|-/g, '');
-        } else if (pattern2) {
-            extractedPhone = pattern2[0].replace(/\s|-/g, '');
-        } else if (arabicDigitsMatch) {
-            const arabicDigits = '٠١٢٣٤٥٦٧٨٩';
-            extractedPhone = arabicDigitsMatch[0].split('').map(d => arabicDigits.indexOf(d)).join('');
+        if (phoneMatches && phoneMatches.length > 0) {
+            const cleanedPhones = phoneMatches.map(p =>
+                p.replace(/[^0-9]/g, '')
+            ).filter(p => p.length === 11);
+
+            console.log("📱 أرقام محتملة:", cleanedPhones);
+
+            if (cleanedPhones.length > 0) {
+                extractedPhone = cleanedPhones[0];
+            }
         }
+
+        // fallback على الأرقام العربية
+        if (extractedPhone === "غير معروف") {
+            const arabicDigitsMatch = ocrText.match(/[\u0660-\u0669]{11}/);
+            if (arabicDigitsMatch) {
+                const arabicDigits = '٠١٢٣٤٥٦٧٨٩';
+                extractedPhone = arabicDigitsMatch[0].split('').map(d => arabicDigits.indexOf(d)).join('');
+            }
+        }
+
         setPhone(extractedPhone);
     };
 

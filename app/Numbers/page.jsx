@@ -133,7 +133,7 @@ function Numbers() {
                                         <strong>اسم المالك : {number.name}</strong>
                                         <strong>الرقم القومي: {number.idNumber}</strong>
                                         <strong> رصيد الخط: {number.amount}</strong>
-                                        <strong>الليمت المتاح: {Number(number.limit) - Number(number.amount)}</strong>
+                                        <strong>الليمت المتاح: {Number(number.limit)}</strong>
                                     </div>
                                 </div>
                             )
