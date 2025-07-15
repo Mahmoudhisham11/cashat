@@ -21,7 +21,8 @@ function Main() {
     const [active, setActive] = useState('')
     const [userName, setUesrName] = useState('');
     const [userEmail, setUserEmail] = useState('');
-    const [total, setTotal] = useState('');
+    const [wallet, setWallet] = useState('')
+    const [cash, setCash] = useState('')
     const [profit, setProfit] = useState('')
     const [operations, setOperations] = useState([])
     const [theme, setTheme] = useState('light');
@@ -60,7 +61,8 @@ function Main() {
                 localStorage.clear();
                 window.location.reload();
             }
-            setTotal(Number(data.cash) + Number(data.wallet));
+            setCash(data.cash)
+            setWallet(data.wallet)
         });
         const opQ = query(collection(db, 'operations'), where('userEmail', '==', userEmail))
         const unSubscribeOp = onSnapshot(opQ, (querySanpshot) => {
@@ -224,9 +226,19 @@ function Main() {
             </div>
             <div className={styles.balanceContainer}>
                 <div className={styles.balanceCard}>
-                    <div className={styles.balanceHead}>
-                        <p>رأس المال المتاح</p>
-                        <h2>{total}.00 جنية</h2>
+                    <div className={styles.balanceContent}>
+                        <div className={styles.balanceHead}>
+                            <p>المتاح بالمحافظ</p>
+                            <p>{wallet}.00 جنية</p>
+                        </div>
+                        <div className={styles.balanceHead}>
+                            <p>الارباح</p>
+                            <p>{profit}.00 جنية</p>
+                        </div>
+                        <div className={styles.balanceHead}>
+                            <p>المتاح النقدي</p>
+                            <p>{cash}.00 جنية</p>
+                        </div>
                     </div>
                     <div className={styles.balanceBtns}>
                         <button onClick={() => setOpenCash(true)}>
