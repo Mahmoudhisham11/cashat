@@ -7,10 +7,12 @@ import { HiQrcode } from "react-icons/hi";
 import { FaTrashAlt } from "react-icons/fa";
 import { IoReloadOutline } from "react-icons/io5";
 import { db } from "../firebase";
-import { addDoc, collection, deleteDoc, doc, onSnapshot, query, updateDoc, where } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, doc, onSnapshot, query, updateDoc, where, getDocs } from "firebase/firestore";
 import QRCode from "react-qr-code";
+import { useRouter } from "next/navigation";
 
 function Numbers() {
+    const router = useRouter();
     const [phone, setPhone] = useState('')
     const [name, setName] = useState('')
     const [idNumber, setIdNumber] = useState('')
@@ -24,11 +26,48 @@ function Numbers() {
     const [numbers, setNumbers] = useState([])
     const btns = ['اضف خط جديد','كل الخطوط']
 
+    const [authorized, setAuthorized] = useState(false);
+    const [loading, setLoading] = useState(true);
+
     useEffect(() => {
-        if(typeof window !== "undefined") {
-            const storageEmail = localStorage.getItem('email')
-            setUserEmail(storageEmail)
-        }
+        const checkLock = async () => {
+            const email = localStorage.getItem("email");
+            setUserEmail(email);
+            if (!email) {
+                router.push('/');
+                return;
+            }
+
+            const q = query(collection(db, "users"), where("email", "==", email));
+            const snapshot = await getDocs(q);
+
+            if (!snapshot.empty) {
+                const userDoc = snapshot.docs[0];
+                const data = userDoc.data();
+
+                if (data.lockNumbers) {
+                    const input = prompt("🚫 تم قفل صفحة الخطوط\nمن فضلك أدخل كلمة المرور:");
+                    if (input === data.lockPassword) {
+                        setAuthorized(true);
+                    } else {
+                        alert("❌ كلمة المرور غير صحيحة");
+                        router.push('/');
+                    }
+                } else {
+                    setAuthorized(true);
+                }
+            } else {
+                router.push('/');
+            }
+
+            setLoading(false);
+        };
+
+        checkLock();
+    }, []);
+
+    useEffect(() => {
+        if (!userEmail) return;
         const q = query(collection(db, 'numbers'), where('userEmail', '==', userEmail))
         const unsubscribe = onSnapshot(q, (querySnapshot) => {
             const numbersSnap = []
@@ -62,11 +101,14 @@ function Numbers() {
     const handleDelet = async(id) => {
         await deleteDoc(doc(db, 'numbers', id))
     }
-    
+
     const handleQr = (phone) => {
         setQrNumber(phone)
         setOpenQr(true)
     }
+
+    if (loading) return <p>جاري التحقق...</p>;
+    if (!authorized) return null;
 
     return(
         <div className="main">
