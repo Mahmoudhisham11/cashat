@@ -26,14 +26,13 @@ function Reports() {
   const [authorized, setAuthorized] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // التحقق من القفل والإيميل معًا في useEffect واحد
   useEffect(() => {
-    const checkLock = async () => {
-      const userEmail = localStorage.getItem("email");
-      if (!userEmail) {
+    const checkLockAndSetEmail = async () => {
+        const userEmail = localStorage.getItem("email");
+        if (!userEmail) {
         router.push('/');
         return;
-      }
+        }
 
       setEmail(userEmail);
 
@@ -42,35 +41,35 @@ function Reports() {
 
       if (!snapshot.empty) {
         const user = snapshot.docs[0].data();
-        console.log("🛡️ بيانات المستخدم:", user);
-
-        if (user.locksreports) {
+         console.log("✅ بيانات المستخدم:", user); 
+        if (user.lockReports) {
           const pass = prompt("🔐 تم قفل صفحة التقارير\nادخل كلمة المرور:");
           if (pass === user.lockPassword) {
             setAuthorized(true);
           } else {
             alert("❌ كلمة المرور غير صحيحة");
             router.push('/');
+            return;
           }
         } else {
           setAuthorized(true);
         }
       } else {
         router.push('/');
+        return;
       }
 
       setLoading(false);
     };
 
-    checkLock();
+    checkLockAndSetEmail();
   }, []);
 
-  // تحميل البيانات من Firebase
+  // تحميل البيانات بعد التأكد من الإذن
   useEffect(() => {
-    if (!email || !dateFrom) return;
+    if (!authorized || !email || !dateFrom) return;
 
     const q = query(collection(db, 'reports'), where('userEmail', '==', email));
-
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const allReports = [];
       querySnapshot.forEach((doc) => {
@@ -90,7 +89,7 @@ function Reports() {
     });
 
     return () => unsubscribe();
-  }, [dateFrom, dateTo, phoneSearch, email]);
+  }, [authorized, dateFrom, dateTo, phoneSearch, email]);
 
   useEffect(() => {
     const subTotal = reports.reduce((acc, report) => acc + Number(report.commation), 0);
@@ -146,4 +145,3 @@ function Reports() {
 }
 
 export default Reports;
-    

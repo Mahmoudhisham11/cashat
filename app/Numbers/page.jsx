@@ -79,22 +79,63 @@ function Numbers() {
         return () => unsubscribe()
     }, [userEmail])
 
+    useEffect(() => {
+        const resetLimitsIfNeeded = async () => {
+            const today = new Date();
+            const todayDate = today.toISOString().split('T')[0];
+            const currentMonth = today.getMonth(); // رقم الشهر من 0 إلى 11
+
+            for (const number of numbers) {
+                const docRef = doc(db, 'numbers', number.id);
+
+                // ✅ reset daily limits
+                if (number.lastDailyReset !== todayDate) {
+                    await updateDoc(docRef, {
+                        dailyWithdraw: 60000,
+                        dailyDeposit: 60000,
+                        lastDailyReset: todayDate
+                    });
+                }
+
+                // ✅ reset monthly limits (باستخدام القيم الأصلية)
+                if (number.lastMonthlyReset !== currentMonth) {
+                    await updateDoc(docRef, {
+                        withdrawLimit: Number(number.originalWithdrawLimit) || 60000,
+                        depositLimit: Number(number.originalDepositLimit) || 60000,
+                        lastMonthlyReset: currentMonth
+                    });
+                }
+            }
+        };
+
+        if (numbers.length > 0) {
+            resetLimitsIfNeeded();
+        }
+    }, [numbers]);
+
+
+
     const handelAddNumber = async() => {
         if(phone !== "") {
-            await addDoc(collection(db, 'numbers'), {
-                phone,
-                name,
-                idNumber,
-                amount,
-                limit,
-                userEmail,
-            })
-            alert('تم اضافة الرقم بنجاح')
-            setPhone('')
-            setName('')
-            setIdNumber('')
-            setAmount('')
-            setLimit('')
+        await addDoc(collection(db, 'numbers'), {
+        phone,
+        name,
+        idNumber,
+        amount,
+        withdrawLimit: limit,
+        depositLimit: limit,
+        originalWithdrawLimit: limit,
+        originalDepositLimit: limit,
+        dailyWithdraw: 60000,
+        dailyDeposit: 60000,
+        userEmail,
+        })
+        alert('تم اضافة الرقم بنجاح')
+        setPhone('')
+        setName('')
+        setIdNumber('')
+        setAmount('')
+        setLimit('')
         }
     }
 
@@ -175,7 +216,10 @@ function Numbers() {
                                         <strong>اسم المالك : {number.name}</strong>
                                         <strong>الرقم القومي: {number.idNumber}</strong>
                                         <strong> رصيد الخط: {number.amount}</strong>
-                                        <strong>الليمت المتاح: {Number(number.limit)}</strong>
+                                        <strong>الليمت المتاح ارسال: {Number(number.withdrawLimit)}</strong>
+                                        <strong>الليمت المتاح استلام: {Number(number.depositLimit)}</strong>
+                                        <strong>الليمت اليومي ارسال: {Number(number.dailyWithdraw)}</strong>
+                                        <strong>الليمت اليومي استلام: {Number(number.dailyDeposit)}</strong>
                                     </div>
                                 </div>
                             )

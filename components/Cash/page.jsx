@@ -111,7 +111,8 @@ function Cash({ openCash, setOpenCash }) {
           const numberData = numberDoc.data();
           await updateDoc(numberRef, {
             amount: Number(numberData.amount) - Number(operationVal),
-            limit: Number(numberData.limit) - Number(operationVal)
+            depositLimit: Number(numberData.depositLimit) - Number(operationVal),
+            dailyDeposit: Number(numberData.dailyDeposit) - Number(operationVal)
           });
         }
 

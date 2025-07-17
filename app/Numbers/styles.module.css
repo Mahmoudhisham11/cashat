@@ -84,7 +84,7 @@
     transition: .3s;
 }
 .numDiv.open {
-    height: 280px;
+    height: 350px;
 }
 .divHeader {
     display: flex;

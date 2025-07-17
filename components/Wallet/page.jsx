@@ -106,7 +106,8 @@ function Wallet({ openWallet, setOpenWallet }) {
           const numberData = numberDoc.data();
           await updateDoc(numberRef, {
             amount: Number(numberData.amount) + Number(operationVal),
-            limit: Number(numberData.limit) - Number(operationVal)
+            withdrawLimit: Number(numberData.withdrawLimit) - Number(operationVal),
+            dailyWithdraw: Number(numberData.dailyWithdraw) - Number(operationVal)
           });
         }
 
