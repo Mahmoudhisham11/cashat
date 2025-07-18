@@ -230,8 +230,8 @@ function Numbers() {
                                         <strong> رصيد الخط: {number.amount}</strong>
                                         <strong>الليمت المتاح ارسال: {Number(number.depositLimit)}</strong>
                                         <strong>الليمت المتاح استلام: {Number(number.withdrawLimit)}</strong>
-                                        <strong>الليمت اليومي استلام: {Number(number.dailyDeposit)}</strong>
-                                        <strong>الليمت اليومي ارسال: {Number(number.dailyWithdraw)}</strong>
+                                        <strong>الليمت اليومي ارسال: {Number(number.dailyDeposit)}</strong>
+                                        <strong>الليمت اليومي استلام: {Number(number.dailyWithdraw)}</strong>
                                     </div>
                                 </div>
                             )
