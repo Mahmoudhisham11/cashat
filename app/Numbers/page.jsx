@@ -228,10 +228,10 @@ function Numbers() {
                                         <strong>اسم المالك : {number.name}</strong>
                                         <strong>الرقم القومي: {number.idNumber}</strong>
                                         <strong> رصيد الخط: {number.amount}</strong>
-                                        <strong>الليمت المتاح ارسال: {Number(number.withdrawLimit)}</strong>
-                                        <strong>الليمت المتاح استلام: {Number(number.depositLimit)}</strong>
-                                        <strong>الليمت اليومي ارسال: {Number(number.dailyWithdraw)}</strong>
+                                        <strong>الليمت المتاح ارسال: {Number(number.depositLimit)}</strong>
+                                        <strong>الليمت المتاح استلام: {Number(number.withdrawLimit)}</strong>
                                         <strong>الليمت اليومي استلام: {Number(number.dailyDeposit)}</strong>
+                                        <strong>الليمت اليومي ارسال: {Number(number.dailyWithdraw)}</strong>
                                     </div>
                                 </div>
                             )
