@@ -18,8 +18,9 @@ function Cash({ openCash, setOpenCash }) {
   const [operationVal, setOperationVal] = useState("");
   const [phone, setPhone] = useState("");
   const [commation, setCommation] = useState("");
-  const [limit, setLimit] = useState("");
   const [amount, setAmount] = useState("");
+  const [depositLimit, setDepositLimit] = useState("");
+  const [dailyDeposit, setDailyDeposit] = useState("");
   const [userEmail, setUserEmail] = useState("");
   const [phoneNumbers, setPhoneNumbers] = useState([]);
 
@@ -51,77 +52,78 @@ function Cash({ openCash, setOpenCash }) {
     if (phone && phoneNumbers.length > 0) {
       const selected = phoneNumbers.find((p) => p.phone === phone);
       if (selected) {
-        setLimit(selected.limit);
+        setDepositLimit(selected.depositLimit);
+        setDailyDeposit(selected.dailyDeposit);
         setAmount(selected.amount);
       }
     }
   }, [phone, phoneNumbers]);
 
-    const handleCashAdd = async () => {
-      if (!phone || phone.trim() === "") {
-        alert("من فضلك اختر رقم الشريحة");
-        return;
-      }
+  const handleCashAdd = async () => {
+    if (!phone || phone.trim() === "") {
+      alert("من فضلك اختر رقم الشريحة");
+      return;
+    }
 
-      if (!operationVal || isNaN(Number(operationVal))) {
-        alert("قيمة العملية غير صالحة");
-        return;
-      }
+    if (!operationVal || isNaN(Number(operationVal))) {
+      alert("قيمة العملية غير صالحة");
+      return;
+    }
 
-      if (!commation || isNaN(Number(commation))) {
-        alert("قيمة العمولة غير صالحة");
-        return;
-      }
+    if (!commation || isNaN(Number(commation))) {
+      alert("قيمة العمولة غير صالحة");
+      return;
+    }
 
-      if (Number(operationVal) > Number(amount)) {
-        alert("قيمة العملية أكبر من رصيد الخط الحالي");
-        return;
-      }
+    if (Number(operationVal) > Number(amount)) {
+      alert("قيمة العملية أكبر من رصيد الخط الحالي");
+      return;
+    }
 
-      const q = query(collection(db, "users"), where("email", "==", userEmail));
-      const querySnapshot = await getDocs(q);
-      if (!querySnapshot.empty) {
-        const userDoc = querySnapshot.docs[0];
-        const userData = userDoc.data();
-        const userRef = doc(db, "users", userDoc.id);
+    const q = query(collection(db, "users"), where("email", "==", userEmail));
+    const querySnapshot = await getDocs(q);
+    if (!querySnapshot.empty) {
+      const userDoc = querySnapshot.docs[0];
+      const userData = userDoc.data();
+      const userRef = doc(db, "users", userDoc.id);
 
-        await addDoc(collection(db, "operations"), {
-          userEmail,
-          commation,
-          operationVal,
-          phone,
-          type: "ارسال",
-          date: new Date().toISOString().split("T")[0],
+      await addDoc(collection(db, "operations"), {
+        userEmail,
+        commation,
+        operationVal,
+        phone,
+        type: "ارسال",
+        date: new Date().toISOString().split("T")[0],
+      });
+
+      await updateDoc(userRef, {
+        wallet: Number(userData.wallet) - Number(operationVal),
+        cash: Number(userData.cash) + Number(operationVal),
+      });
+
+      const nq = query(
+        collection(db, "numbers"),
+        where("phone", "==", phone),
+        where("userEmail", "==", userEmail)
+      );
+      const nSnapshot = await getDocs(nq);
+      if (!nSnapshot.empty) {
+        const numberDoc = nSnapshot.docs[0];
+        const numberRef = doc(db, "numbers", numberDoc.id);
+        const numberData = numberDoc.data();
+        await updateDoc(numberRef, {
+          amount: Number(numberData.amount) - Number(operationVal),
+          depositLimit: Number(numberData.depositLimit) - Number(operationVal),
+          dailyDeposit: Number(numberData.dailyDeposit) - Number(operationVal),
         });
-
-        await updateDoc(userRef, {
-          wallet: Number(userData.wallet) - Number(operationVal),
-          cash: Number(userData.cash) + Number(operationVal),
-        });
-
-        const nq = query(
-          collection(db, "numbers"),
-          where("phone", "==", phone),
-          where("userEmail", "==", userEmail)
-        );
-        const nSnapshot = await getDocs(nq);
-        if (!nSnapshot.empty) {
-          const numberDoc = nSnapshot.docs[0];
-          const numberRef = doc(db, "numbers", numberDoc.id);
-          const numberData = numberDoc.data();
-          await updateDoc(numberRef, {
-            amount: Number(numberData.amount) - Number(operationVal),
-            depositLimit: Number(numberData.depositLimit) - Number(operationVal),
-            dailyDeposit: Number(numberData.dailyDeposit) - Number(operationVal)
-          });
-        }
-
-        alert("تم اتمام العملية بنجاح");
-        setCommation("");
-        setOperationVal("");
-        setPhone("");
       }
-    };
+
+      alert("تم اتمام العملية بنجاح");
+      setCommation("");
+      setOperationVal("");
+      setPhone("");
+    }
+  };
 
   return (
     <div className={openCash ? "operationContainer active" : "operationContainer"}>
@@ -183,10 +185,20 @@ function Cash({ openCash, setOpenCash }) {
 
           <div className="amounts">
             <div className="inputContainer">
-              <label>الليمت المتاح :</label>
+              <label>الليمت الشهري المتاح للإرسال :</label>
               <input
                 type="number"
-                value={Number(limit)}
+                value={Number(depositLimit)}
+                placeholder="0"
+                disabled
+                readOnly
+              />
+            </div>
+            <div className="inputContainer">
+              <label>الليمت اليومي المتاح للإرسال :</label>
+              <input
+                type="number"
+                value={Number(dailyDeposit)}
                 placeholder="0"
                 disabled
                 readOnly

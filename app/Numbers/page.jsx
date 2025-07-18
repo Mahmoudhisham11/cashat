@@ -83,12 +83,11 @@ function Numbers() {
         const resetLimitsIfNeeded = async () => {
             const today = new Date();
             const todayDate = today.toISOString().split('T')[0];
-            const currentMonth = today.getMonth(); // رقم الشهر من 0 إلى 11
+            const currentMonth = today.getMonth();
 
             for (const number of numbers) {
                 const docRef = doc(db, 'numbers', number.id);
 
-                // ✅ reset daily limits
                 if (number.lastDailyReset !== todayDate) {
                     await updateDoc(docRef, {
                         dailyWithdraw: 60000,
@@ -97,7 +96,6 @@ function Numbers() {
                     });
                 }
 
-                // ✅ reset monthly limits (باستخدام القيم الأصلية)
                 if (number.lastMonthlyReset !== currentMonth) {
                     await updateDoc(docRef, {
                         withdrawLimit: Number(number.originalWithdrawLimit) || 60000,
@@ -112,8 +110,6 @@ function Numbers() {
             resetLimitsIfNeeded();
         }
     }, [numbers]);
-
-
 
     const handelAddNumber = async() => {
         if(phone !== "") {
@@ -148,6 +144,21 @@ function Numbers() {
         setOpenQr(true)
     }
 
+    const handleDeleteAll = async () => {
+        if (!confirm("هل أنت متأكد من حذف جميع البيانات؟ سيتم حذف الخطوط، العمليات، والتقارير.")) return;
+
+        const collectionsToDelete = ['numbers', 'operations', 'reports'];
+
+        for (const collectionName of collectionsToDelete) {
+            const q = query(collection(db, collectionName), where('userEmail', '==', userEmail));
+            const querySnapshot = await getDocs(q);
+            const deletePromises = querySnapshot.docs.map((docSnap) => deleteDoc(doc(db, collectionName, docSnap.id)));
+            await Promise.all(deletePromises);
+        }
+
+        alert("تم حذف كل البيانات بنجاح ✅");
+    }
+
     if (loading) return <p>جاري التحقق...</p>;
     if (!authorized) return null;
 
@@ -170,6 +181,7 @@ function Numbers() {
                                 <button className={active === index ? `${styles.active}` : ``} onClick={() => setActive(index)} key={index}>{btn}</button>
                             )
                         })}
+                        <button className={styles.deleteAll} onClick={handleDeleteAll}><FaTrashAlt/></button>
                     </div>
                     <div className={styles.cardInfo} style={{display: active === 0 ? 'flex' : 'none'}}>
                         <div className={styles.info}>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { MdOutlineKeyboardArrowLeft } from "react-icons/md";
 import { IoIosArrowDown } from "react-icons/io";
+import { FaTrashAlt } from "react-icons/fa";
 import { db } from "../firebase";
 import {
   collection,
@@ -11,6 +12,8 @@ import {
   onSnapshot,
   query,
   where,
+  deleteDoc,
+  doc,
 } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 
@@ -28,11 +31,11 @@ function Reports() {
 
   useEffect(() => {
     const checkLockAndSetEmail = async () => {
-        const userEmail = localStorage.getItem("email");
-        if (!userEmail) {
+      const userEmail = localStorage.getItem("email");
+      if (!userEmail) {
         router.push('/');
         return;
-        }
+      }
 
       setEmail(userEmail);
 
@@ -41,7 +44,6 @@ function Reports() {
 
       if (!snapshot.empty) {
         const user = snapshot.docs[0].data();
-         console.log("✅ بيانات المستخدم:", user); 
         if (user.lockReports) {
           const pass = prompt("🔐 تم قفل صفحة التقارير\nادخل كلمة المرور:");
           if (pass === user.lockPassword) {
@@ -65,7 +67,6 @@ function Reports() {
     checkLockAndSetEmail();
   }, []);
 
-  // تحميل البيانات بعد التأكد من الإذن
   useEffect(() => {
     if (!authorized || !email || !dateFrom) return;
 
@@ -96,6 +97,25 @@ function Reports() {
     setTotal(subTotal);
   }, [reports]);
 
+  const handleDeleteAllReports = async () => {
+    const confirmDelete = confirm("هل أنت متأكد أنك تريد حذف جميع التقارير؟ لا يمكن التراجع.");
+    if (!confirmDelete) return;
+
+    try {
+      const q = query(collection(db, "reports"), where("userEmail", "==", email));
+      const querySnapshot = await getDocs(q);
+      const deletePromises = querySnapshot.docs.map((docSnap) =>
+        deleteDoc(doc(db, "reports", docSnap.id))
+      );
+
+      await Promise.all(deletePromises);
+      alert("✅ تم حذف جميع التقارير بنجاح");
+    } catch (error) {
+      console.error("❌ حدث خطأ أثناء الحذف:", error);
+      alert("حدث خطأ أثناء حذف التقارير");
+    }
+  };
+
   if (loading) return <p>🔄 جاري التحقق...</p>;
   if (!authorized) return null;
 
@@ -118,6 +138,7 @@ function Reports() {
         <div className={styles.content}>
           <div className={styles.contentTitle}>
             <h2>اجمالي الارباح : {total} جنية</h2>
+            <button onClick={handleDeleteAllReports}><FaTrashAlt/></button>
           </div>
 
           {reports.map((report, index) => (

@@ -7,6 +7,7 @@ import { GiMoneyStack } from "react-icons/gi";
 import { MdKeyboardArrowLeft } from "react-icons/md";
 import { RiLogoutCircleLine } from "react-icons/ri";
 import { BsPersonVideo2 } from "react-icons/bs";
+import { CiLock } from "react-icons/ci";
 import { useRouter } from "next/navigation";
 import CashPop from "../../components/CashPop/page";
 import Developer from "../../components/Developer/page";
@@ -23,7 +24,7 @@ function Sittings() {
     const [passwordInput, setPasswordInput] = useState('');
     const [isPasswordVerified, setIsPasswordVerified] = useState(false);
     const [hasPassword, setHasPassword] = useState(false);
-    const [locks, setLocks] = useState({ reports: false, numbers: false, money: false });
+    const [locks, setLocks] = useState({ reports: false, numbers: false, money: false, cash: false });
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -76,7 +77,8 @@ function Sittings() {
                     lockPassword: password,
                     lockReports: locks.reports,
                     lockNumbers: locks.numbers,
-                    lockMoney: locks.money
+                    lockMoney: locks.money,
+                    lockCash: locks.cash
                 });
 
                 alert("✅ تم تعيين كلمة المرور لأول مرة");
@@ -106,7 +108,8 @@ function Sittings() {
                 setLocks({
                     reports: data.lockReports || false,
                     numbers: data.lockNumbers || false,
-                    money: data.lockMoney || false
+                    money: data.lockMoney || false,
+                    cash: data.lockCash || false
                 });
             } else {
                 alert("كلمة المرور غير صحيحة ❌");
@@ -127,7 +130,8 @@ function Sittings() {
             await updateDoc(userRef, {
                 lockReports: locks.reports,
                 lockNumbers: locks.numbers,
-                lockMoney: locks.money
+                lockMoney: locks.money,
+                lockCash: locks.cash
             });
 
             alert("✅ تم تحديث الاختيارات بدون تغيير كلمة المرور");
@@ -160,7 +164,7 @@ function Sittings() {
                             <hr />
                             <div className={styles.btnContent}>
                                 <button onClick={() => setShowPasswordForm(!showPasswordForm)}>
-                                    <span><GiMoneyStack /></span>
+                                    <span><CiLock /></span>
                                     <span>كلمات المرور</span>
                                 </button>
                                 <p><MdKeyboardArrowLeft /></p>
@@ -219,6 +223,14 @@ function Sittings() {
                                                     onChange={() => setLocks(prev => ({ ...prev, money: !prev.money }))}
                                                 />
                                                 اقفال المالية
+                                            </label>
+                                            <label>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={locks.cash}
+                                                    onChange={() => setLocks(prev => ({ ...prev, cash: !prev.cash }))}
+                                                />
+                                                اقفال النقدي
                                             </label>
                                         </div>
                                         <button onClick={handleLockUpdate}>حفظ التعديلات</button>

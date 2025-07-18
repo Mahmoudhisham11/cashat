@@ -20,7 +20,8 @@ function Wallet({ openWallet, setOpenWallet }) {
   const [commation, setCommation] = useState("");
   const [userEmail, setUserEmail] = useState("");
   const [phoneNumbers, setPhoneNumbers] = useState([]);
-  const [limit, setLimit] = useState("");
+  const [withdrawLimit, setWithdrawLimit] = useState("");
+  const [dailyWithdraw, setDailyWithdraw] = useState("");
   const [amount, setAmount] = useState("");
 
   useEffect(() => {
@@ -51,72 +52,73 @@ function Wallet({ openWallet, setOpenWallet }) {
     if (phone && phoneNumbers.length > 0) {
       const selected = phoneNumbers.find((item) => item.phone === phone);
       if (selected) {
-        setLimit(selected.limit);
+        setWithdrawLimit(selected.withdrawLimit);
+        setDailyWithdraw(selected.dailyWithdraw);
         setAmount(selected.amount);
       }
     }
   }, [phone, phoneNumbers]);
 
-    const handleWalletAdd = async () => {
-      if (!phone || phone.trim() === "") {
-        alert("من فضلك اختر رقم الشريحة");
-        return;
-      }
+  const handleWalletAdd = async () => {
+    if (!phone || phone.trim() === "") {
+      alert("من فضلك اختر رقم الشريحة");
+      return;
+    }
 
-      if (!operationVal || isNaN(Number(operationVal))) {
-        alert("قيمة العملية غير صالحة");
-        return;
-      }
+    if (!operationVal || isNaN(Number(operationVal))) {
+      alert("قيمة العملية غير صالحة");
+      return;
+    }
 
-      if (!commation || isNaN(Number(commation))) {
-        alert("قيمة العمولة غير صالحة");
-        return;
-      }
+    if (!commation || isNaN(Number(commation))) {
+      alert("قيمة العمولة غير صالحة");
+      return;
+    }
 
-      const q = query(collection(db, "users"), where("email", "==", userEmail));
-      const querySnapshot = await getDocs(q);
-      if (!querySnapshot.empty) {
-        const userDoc = querySnapshot.docs[0];
-        const userData = userDoc.data();
-        const userRef = doc(db, "users", userDoc.id);
+    const q = query(collection(db, "users"), where("email", "==", userEmail));
+    const querySnapshot = await getDocs(q);
+    if (!querySnapshot.empty) {
+      const userDoc = querySnapshot.docs[0];
+      const userData = userDoc.data();
+      const userRef = doc(db, "users", userDoc.id);
 
-        await addDoc(collection(db, "operations"), {
-          userEmail,
-          commation,
-          operationVal,
-          phone,
-          type: "استلام",
-          date: new Date().toISOString().split("T")[0],
+      await addDoc(collection(db, "operations"), {
+        userEmail,
+        commation,
+        operationVal,
+        phone,
+        type: "استلام",
+        date: new Date().toISOString().split("T")[0],
+      });
+
+      await updateDoc(userRef, {
+        wallet: Number(userData.wallet) + Number(operationVal),
+        cash: Number(userData.cash) - Number(operationVal),
+      });
+
+      const nq = query(
+        collection(db, "numbers"),
+        where("phone", "==", phone),
+        where("userEmail", "==", userEmail)
+      );
+      const nSnapshot = await getDocs(nq);
+      if (!nSnapshot.empty) {
+        const numberDoc = nSnapshot.docs[0];
+        const numberRef = doc(db, "numbers", numberDoc.id);
+        const numberData = numberDoc.data();
+        await updateDoc(numberRef, {
+          amount: Number(numberData.amount) + Number(operationVal),
+          withdrawLimit: Number(numberData.withdrawLimit) - Number(operationVal),
+          dailyWithdraw: Number(numberData.dailyWithdraw) - Number(operationVal),
         });
-
-        await updateDoc(userRef, {
-          wallet: Number(userData.wallet) + Number(operationVal),
-          cash: Number(userData.cash) - Number(operationVal),
-        });
-
-        const nq = query(
-          collection(db, "numbers"),
-          where("phone", "==", phone),
-          where("userEmail", "==", userEmail)
-        );
-        const nSnapshot = await getDocs(nq);
-        if (!nSnapshot.empty) {
-          const numberDoc = nSnapshot.docs[0];
-          const numberRef = doc(db, "numbers", numberDoc.id);
-          const numberData = numberDoc.data();
-          await updateDoc(numberRef, {
-            amount: Number(numberData.amount) + Number(operationVal),
-            withdrawLimit: Number(numberData.withdrawLimit) - Number(operationVal),
-            dailyWithdraw: Number(numberData.dailyWithdraw) - Number(operationVal)
-          });
-        }
-
-        alert("تم اتمام العملية بنجاح");
-        setPhone("");
-        setCommation("");
-        setOperationVal("");
       }
-    };
+
+      alert("تم اتمام العملية بنجاح");
+      setPhone("");
+      setCommation("");
+      setOperationVal("");
+    }
+  };
 
   return (
     <div className={openWallet ? "operationContainer active" : "operationContainer"}>
@@ -175,10 +177,20 @@ function Wallet({ openWallet, setOpenWallet }) {
           </div>
           <div className="amounts">
             <div className="inputContainer">
-              <label>الليمت المتاح :</label>
+              <label>الليمت الشهري المتاح للاستلام :</label>
               <input
                 type="number"
-                value={Number(limit) - Number(amount)}
+                value={Number(withdrawLimit)}
+                placeholder="0"
+                disabled
+                readOnly
+              />
+            </div>
+            <div className="inputContainer">
+              <label>الليمت اليومي المتاح للاستلام :</label>
+              <input
+                type="number"
+                value={Number(dailyWithdraw)}
                 placeholder="0"
                 disabled
                 readOnly
