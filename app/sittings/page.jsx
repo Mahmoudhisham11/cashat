@@ -22,6 +22,7 @@ function Sittings() {
     const [showPasswordForm, setShowPasswordForm] = useState(false);
     const [password, setPassword] = useState('');
     const [passwordInput, setPasswordInput] = useState('');
+    const [newPassword, setNewPassword] = useState('');
     const [isPasswordVerified, setIsPasswordVerified] = useState(false);
     const [hasPassword, setHasPassword] = useState(false);
     const [locks, setLocks] = useState({ reports: false, numbers: false, money: false, cash: false });
@@ -127,16 +128,22 @@ function Sittings() {
             const userDoc = querySnapshot.docs[0];
             const userRef = doc(db, "users", userDoc.id);
 
-            await updateDoc(userRef, {
+            const updateData = {
                 lockReports: locks.reports,
                 lockNumbers: locks.numbers,
                 lockMoney: locks.money,
                 lockCash: locks.cash
-            });
+            };
 
-            alert("✅ تم تحديث الاختيارات بدون تغيير كلمة المرور");
-            if(typeof window !== "undefined") {
-                window.location.reload()
+            if (newPassword.trim() !== '') {
+                updateData.lockPassword = newPassword.trim();
+            }
+
+            await updateDoc(userRef, updateData);
+
+            alert("✅ تم تحديث الاختيارات");
+            if (typeof window !== "undefined") {
+                window.location.reload();
             }
         }
     };
@@ -200,6 +207,12 @@ function Sittings() {
                                 {isPasswordVerified && (
                                     <>
                                         <div className={styles.locks}>
+                                            <input
+                                                type="text"
+                                                placeholder="تعديل كلمة المرور"
+                                                value={newPassword}
+                                                onChange={(e) => setNewPassword(e.target.value)}
+                                            />
                                             <label>
                                                 <input
                                                     type="checkbox"
