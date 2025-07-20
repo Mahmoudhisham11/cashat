@@ -134,47 +134,82 @@ function Main() {
 
   const formatValue = (value) => hideAmounts ? "***" : `${value}.00 جنية`;
 
-  const handelDelete = async (id) => {
-    try {
-      const opRef = doc(db, 'operations', id);
-      const opSnap = await getDoc(opRef);
-      if (!opSnap.exists()) {
-        alert("العملية غير موجودة");
+const handelDelete = async (id) => {
+  try {
+    console.log('test');
+
+    const opRef = doc(db, 'operations', id);
+    const opSnap = await getDoc(opRef);
+    if (!opSnap.exists()) {
+      alert("⚠️ العملية غير موجودة.");
+      return;
+    }
+
+    const operationData = opSnap.data();
+    const { phone, operationVal, type, userEmail: operationUserEmail } = operationData;
+
+    // جلب بيانات المستخدم للتأكد من حالة القفل
+    const usersQuery = query(
+      collection(db, 'users'),
+      where('email', '==', operationUserEmail)
+    );
+    const usersSnapshot = await getDocs(usersQuery);
+
+    if (!usersSnapshot.empty) {
+      const userData = usersSnapshot.docs[0].data();
+      const lockDaily = userData.lockDaily;
+
+      if (lockDaily === true) {
+        const password = prompt("🔒 يرجى إدخال كلمة المرور لحذف العملية:");
+        if (password !== userData.lockPassword) {
+          alert("❌ كلمة المرور غير صحيحة.");
+          return;
+        }
+      }
+    }
+
+    // تعديل الرصيد
+    const nq = query(
+      collection(db, 'numbers'),
+      where('phone', '==', phone),
+      where('userEmail', '==', operationUserEmail)
+    );
+    const nSnapshot = await getDocs(nq);
+
+    if (!nSnapshot.empty) {
+      const numberDoc = nSnapshot.docs[0];
+      const numberRef = doc(db, 'numbers', numberDoc.id);
+      const numberData = numberDoc.data();
+      const oldAmount = Number(numberData.amount);
+      const value = Number(operationVal);
+      let newAmount;
+
+      if (type === "ارسال") {
+        newAmount = oldAmount + value;
+      } else if (type === "استلام") {
+        newAmount = oldAmount - value;
+        if (newAmount < 0) {
+          alert("⚠️ لا يمكن حذف العملية لأن الرصيد الناتج سيكون بالسالب.");
+          return;
+        }
+      } else {
+        alert("⚠️ نوع العملية غير معروف.");
         return;
       }
 
-      const operationData = opSnap.data();
-      const { phone, operationVal, type, userEmail } = operationData;
-      const nq = query(collection(db, 'numbers'), where('phone', '==', phone), where('userEmail', '==', userEmail));
-      const nSnapshot = await getDocs(nq);
-      if (!nSnapshot.empty) {
-        const numberDoc = nSnapshot.docs[0];
-        const numberRef = doc(db, 'numbers', numberDoc.id);
-        const numberData = numberDoc.data();
-        const oldAmount = Number(numberData.amount);
-        const value = Number(operationVal);
-        let newAmount;
-        if (type === "ارسال") {
-          newAmount = oldAmount + value;
-        } else if (type === "استلام") {
-          newAmount = oldAmount - value;
-          if (newAmount < 0) {
-            alert("لا يمكن حذف العملية لأن الرصيد الناتج سيكون بالسالب.");
-            return;
-          }
-        } else {
-          alert("نوع العملية غير معروف.");
-          return;
-        }
-        await updateDoc(numberRef, { amount: newAmount });
-      }
-      await deleteDoc(opRef);
-      alert("✅ تم حذف العملية بنجاح.");
-    } catch (error) {
-      console.error("❌ خطأ أثناء حذف العملية:", error);
-      alert("❌ حدث خطأ أثناء حذف العملية.");
+      await updateDoc(numberRef, { amount: newAmount });
     }
-  };
+
+    // حذف العملية
+    await deleteDoc(opRef);
+    alert("✅ تم حذف العملية بنجاح.");
+  } catch (error) {
+    console.error("❌ خطأ أثناء حذف العملية:", error);
+    alert("❌ حدث خطأ أثناء حذف العملية.");
+  }
+};
+
+
 
   const handelDeleteDay = async () => {
     const confirmDelete = window.confirm("هل أنت متأكد من تقفيل اليوم؟ سيتم نقل العمليات إلى الأرشيف ومسحها من القائمة.");

@@ -25,7 +25,13 @@ function Sittings() {
     const [newPassword, setNewPassword] = useState('');
     const [isPasswordVerified, setIsPasswordVerified] = useState(false);
     const [hasPassword, setHasPassword] = useState(false);
-    const [locks, setLocks] = useState({ reports: false, numbers: false, money: false, cash: false });
+    const [locks, setLocks] = useState({
+        reports: false,
+        numbers: false,
+        money: false,
+        cash: false,
+        daily: false
+    });
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -79,7 +85,8 @@ function Sittings() {
                     lockReports: locks.reports,
                     lockNumbers: locks.numbers,
                     lockMoney: locks.money,
-                    lockCash: locks.cash
+                    lockCash: locks.cash,
+                    lockDaily: locks.daily
                 });
 
                 alert("✅ تم تعيين كلمة المرور لأول مرة");
@@ -90,7 +97,7 @@ function Sittings() {
                 setShowPasswordForm(true);
             } else {
                 alert("⚠️ كلمة المرور تم تعيينها بالفعل ولا يمكن تعديلها");
-            }  
+            }
         }
     };
 
@@ -110,7 +117,8 @@ function Sittings() {
                     reports: data.lockReports || false,
                     numbers: data.lockNumbers || false,
                     money: data.lockMoney || false,
-                    cash: data.lockCash || false
+                    cash: data.lockCash || false,
+                    daily: data.lockDaily || false
                 });
             } else {
                 alert("كلمة المرور غير صحيحة ❌");
@@ -132,7 +140,8 @@ function Sittings() {
                 lockReports: locks.reports,
                 lockNumbers: locks.numbers,
                 lockMoney: locks.money,
-                lockCash: locks.cash
+                lockCash: locks.cash,
+                lockDaily: locks.daily
             };
 
             if (newPassword.trim() !== '') {
@@ -244,6 +253,14 @@ function Sittings() {
                                                     onChange={() => setLocks(prev => ({ ...prev, cash: !prev.cash }))}
                                                 />
                                                 اقفال النقدي
+                                            </label>
+                                            <label>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={locks.daily}
+                                                    onChange={() => setLocks(prev => ({ ...prev, daily: !prev.daily }))}
+                                                />
+                                                اقفال العمليات اليومية
                                             </label>
                                         </div>
                                         <button onClick={handleLockUpdate}>حفظ التعديلات</button>

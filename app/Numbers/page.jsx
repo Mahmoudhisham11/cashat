@@ -13,18 +13,19 @@ import { useRouter } from "next/navigation";
 
 function Numbers() {
     const router = useRouter();
-    const [phone, setPhone] = useState('')
-    const [name, setName] = useState('')
-    const [idNumber, setIdNumber] = useState('')
-    const [amount, setAmount] = useState('')
-    const [limit, setLimit] = useState('')
-    const [userEmail, setUserEmail] = useState('')
-    const [qrNumber, setQrNumber] = useState('')
-    const [active, setActive] = useState(0)
-    const [openCard, setOpenCard] = useState('')
-    const [openQr, setOpenQr] = useState(false)
-    const [numbers, setNumbers] = useState([])
-    const btns = ['اضف خط جديد','كل الخطوط']
+    const [phone, setPhone] = useState('');
+    const [name, setName] = useState('');
+    const [idNumber, setIdNumber] = useState('');
+    const [amount, setAmount] = useState('');
+    const [limit, setLimit] = useState('');
+    const [userEmail, setUserEmail] = useState('');
+    const [qrNumber, setQrNumber] = useState('');
+    const [active, setActive] = useState(0);
+    const [openCard, setOpenCard] = useState('');
+    const [openQr, setOpenQr] = useState(false);
+    const [numbers, setNumbers] = useState([]);
+    const [searchTerm, setSearchTerm] = useState('');
+    const btns = ['اضف خط جديد','كل الخطوط'];
 
     const [authorized, setAuthorized] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -68,16 +69,16 @@ function Numbers() {
 
     useEffect(() => {
         if (!userEmail) return;
-        const q = query(collection(db, 'numbers'), where('userEmail', '==', userEmail))
+        const q = query(collection(db, 'numbers'), where('userEmail', '==', userEmail));
         const unsubscribe = onSnapshot(q, (querySnapshot) => {
-            const numbersSnap = []
+            const numbersSnap = [];
             querySnapshot.forEach((doc) => {
-                numbersSnap.push({...doc.data(), id: doc.id})
-            })
-            setNumbers(numbersSnap)
-        })
-        return () => unsubscribe()
-    }, [userEmail])
+                numbersSnap.push({...doc.data(), id: doc.id});
+            });
+            setNumbers(numbersSnap);
+        });
+        return () => unsubscribe();
+    }, [userEmail]);
 
     useEffect(() => {
         const resetLimitsIfNeeded = async () => {
@@ -111,38 +112,38 @@ function Numbers() {
         }
     }, [numbers]);
 
-    const handelAddNumber = async() => {
-        if(phone !== "") {
-        await addDoc(collection(db, 'numbers'), {
-        phone,
-        name,
-        idNumber,
-        amount,
-        withdrawLimit: limit,
-        depositLimit: limit,
-        originalWithdrawLimit: limit,
-        originalDepositLimit: limit,
-        dailyWithdraw: 60000,
-        dailyDeposit: 60000,
-        userEmail,
-        })
-        alert('تم اضافة الرقم بنجاح')
-        setPhone('')
-        setName('')
-        setIdNumber('')
-        setAmount('')
-        setLimit('')
+    const handelAddNumber = async () => {
+        if (phone !== "") {
+            await addDoc(collection(db, 'numbers'), {
+                phone,
+                name,
+                idNumber,
+                amount,
+                withdrawLimit: limit,
+                depositLimit: limit,
+                originalWithdrawLimit: limit,
+                originalDepositLimit: limit,
+                dailyWithdraw: 60000,
+                dailyDeposit: 60000,
+                userEmail,
+            });
+            alert('تم اضافة الرقم بنجاح');
+            setPhone('');
+            setName('');
+            setIdNumber('');
+            setAmount('');
+            setLimit('');
         }
-    }
+    };
 
-    const handleDelet = async(id) => {
-        await deleteDoc(doc(db, 'numbers', id))
-    }
+    const handleDelet = async (id) => {
+        await deleteDoc(doc(db, 'numbers', id));
+    };
 
     const handleQr = (phone) => {
-        setQrNumber(phone)
-        setOpenQr(true)
-    }
+        setQrNumber(phone);
+        setOpenQr(true);
+    };
 
     const handleDeleteAll = async () => {
         if (!confirm("هل أنت متأكد من حذف جميع البيانات؟ سيتم حذف الخطوط، العمليات، والتقارير.")) return;
@@ -157,12 +158,16 @@ function Numbers() {
         }
 
         alert("تم حذف كل البيانات بنجاح ✅");
-    }
+    };
+
+    const filteredNumbers = numbers.filter((number) =>
+        number.phone.includes(searchTerm)
+    );
 
     if (loading) return <p>جاري التحقق...</p>;
     if (!authorized) return null;
 
-    return(
+    return (
         <div className="main">
             <div className={openQr ? `${styles.qrContainer} ${styles.active}` : `${styles.qrContainer}`}>
                 <button onClick={() => setOpenQr(false)}><MdOutlineKeyboardArrowLeft/></button>
@@ -176,11 +181,9 @@ function Numbers() {
                 </div>
                 <div className={styles.content}>
                     <div className={styles.btnsContainer}>
-                        {btns.map((btn, index) => {
-                            return(
-                                <button className={active === index ? `${styles.active}` : ``} onClick={() => setActive(index)} key={index}>{btn}</button>
-                            )
-                        })}
+                        {btns.map((btn, index) => (
+                            <button className={active === index ? `${styles.active}` : ``} onClick={() => setActive(index)} key={index}>{btn}</button>
+                        ))}
                         <button className={styles.deleteAll} onClick={handleDeleteAll}><FaTrashAlt/></button>
                     </div>
                     <div className={styles.cardInfo} style={{display: active === 0 ? 'flex' : 'none'}}>
@@ -212,35 +215,41 @@ function Numbers() {
                         </div>
                         <button className={styles.addBtn} onClick={handelAddNumber}>اكمل العملية</button>
                     </div>
-                    <div className={styles.cardContent} style={{display: active == 1 ? 'flex' : 'none'}}>
-                        {numbers.map((number, index) => {
-                            return(
-                                <div key={number.id} onClick={() => setOpenCard(openCard === index ? null : index)} className={openCard === index ? `${styles.numDiv} ${styles.open}` : `${styles.numDiv}`}>
-                                    <div className={styles.divHeader}>
-                                        <h2 style={{color: Number(number.withdraw) + Number(number.deposit) >= 50000 ? 'red' : ''}}>{number.phone}</h2>
-                                        <div className={styles.btns}>
-                                            <button onClick={() => handleQr(number.phone)}><HiQrcode/></button>
-                                            <button onClick={() => handleDelet(number.id)}><FaTrashAlt/></button>
-                                        </div>
-                                    </div>
-                                    <hr />
-                                    <div className={styles.divFooter}>
-                                        <strong>اسم المالك : {number.name}</strong>
-                                        <strong>الرقم القومي: {number.idNumber}</strong>
-                                        <strong> رصيد الخط: {number.amount}</strong>
-                                        <strong>الليمت المتاح ارسال: {Number(number.depositLimit)}</strong>
-                                        <strong>الليمت المتاح استلام: {Number(number.withdrawLimit)}</strong>
-                                        <strong>الليمت اليومي ارسال: {Number(number.dailyDeposit)}</strong>
-                                        <strong>الليمت اليومي استلام: {Number(number.dailyWithdraw)}</strong>
+                    <div className={styles.cardContent} style={{display: active === 1 ? 'flex' : 'none'}}>
+                        <div className="inputContainer">
+                            <input
+                                type="text"
+                                placeholder="ابحث عن رقم"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                        {filteredNumbers.map((number, index) => (
+                            <div key={number.id} onClick={() => setOpenCard(openCard === index ? null : index)} className={openCard === index ? `${styles.numDiv} ${styles.open}` : `${styles.numDiv}`}>
+                                <div className={styles.divHeader}>
+                                    <h2 style={{color: Number(number.withdraw) + Number(number.deposit) >= 50000 ? 'red' : ''}}>{number.phone}</h2>
+                                    <div className={styles.btns}>
+                                        <button onClick={() => handleQr(number.phone)}><HiQrcode/></button>
+                                        <button onClick={() => handleDelet(number.id)}><FaTrashAlt/></button>
                                     </div>
                                 </div>
-                            )
-                        })}
+                                <hr />
+                                <div className={styles.divFooter}>
+                                    <strong>اسم المالك : {number.name}</strong>
+                                    <strong>الرقم القومي: {number.idNumber}</strong>
+                                    <strong> رصيد الخط: {number.amount}</strong>
+                                    <strong>الليمت المتاح ارسال: {Number(number.depositLimit)}</strong>
+                                    <strong>الليمت المتاح استلام: {Number(number.withdrawLimit)}</strong>
+                                    <strong>الليمت اليومي ارسال: {Number(number.dailyDeposit)}</strong>
+                                    <strong>الليمت اليومي استلام: {Number(number.dailyWithdraw)}</strong>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </div>
         </div>
-    )
+    );
 }
 
 export default Numbers;
