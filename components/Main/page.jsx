@@ -289,11 +289,13 @@ const handelDelete = async (id) => {
             >
               <div className={styles.cardHead}>
                 <h3>{operation.phone}</h3>
-                <button onClick={() => handelDelete(operation.id)}><FaRegTrashAlt /></button>
+                <div className={styles.type}>
+                  <strong>{operation.type}</strong>
+                  <button onClick={() => handelDelete(operation.id)}><FaRegTrashAlt /></button>
+                </div>
               </div>
               <hr />
               <div className={styles.cardBody}>
-                <strong>نوع العملية : {operation.type}</strong>
                 <strong>قيمة العملية : {operation.operationVal} جنية</strong>
                 <strong>عمولة العملية : {operation.commation} جنية</strong>
               </div>

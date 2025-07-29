@@ -9,12 +9,11 @@ function Login() {
     const [name, setName] = useState('')
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
-    const [wallet, setWallet] = useState('')
     const [cash, setChash] = useState('')
 
     // CREATE NEW ACCOUNT
     const handleCreatAcc = async() => {
-        if(name !== "" && email !== "" && password !== "" && wallet !== "" && cash !== "") {
+        if(name !== "" && email !== "" && password !== "" && cash !== "") {
             const userRef = collection(db, "users")
             const q = query(userRef, where("email", "==", email))
             const querySnapshot = await getDocs(q)
@@ -23,7 +22,6 @@ function Login() {
                     name, 
                     email, 
                     password, 
-                    wallet, 
                     cash,
                     isSubscribed: false,
                     date: serverTimestamp()
@@ -32,14 +30,12 @@ function Login() {
                 setName('')
                 setEmail('')
                 setPassword('')
-                setWallet('')
                 setChash('')
             }else {
                 alert("المستخدم موجود بالفعل")
                 setName('')
                 setEmail('')
                 setPassword('')
-                setWallet('')
                 setChash('')
             }
         }
@@ -110,10 +106,6 @@ function Login() {
                         <div className="inputContainer">
                             <label htmlFor="">كلمة المرور :</label>
                             <input type="password" value={password} placeholder="اخل كلمة المرور الخاصة بك" onChange={(e) => setPassword(e.target.value)}/>
-                        </div>
-                        <div className="inputContainer">
-                            <label htmlFor="">رصيد المحفظة : </label>
-                            <input type="text" value={wallet} placeholder="اخل رصيدك في محفظة الكاش" onChange={(e) => setWallet(e.target.value)}/>
                         </div>
                         <div className="inputContainer">
                             <label htmlFor="">رصيد الكاش : </label>

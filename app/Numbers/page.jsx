@@ -83,26 +83,32 @@ function Numbers() {
     useEffect(() => {
         const resetLimitsIfNeeded = async () => {
             const today = new Date();
-            const todayDate = today.toISOString().split('T')[0];
+            const todayDate = today.toLocaleDateString('en-CA'); // YYYY-MM-DD بالتوقيت المحلي
             const currentMonth = today.getMonth();
 
             for (const number of numbers) {
                 const docRef = doc(db, 'numbers', number.id);
 
-                if (number.lastDailyReset !== todayDate) {
-                    await updateDoc(docRef, {
-                        dailyWithdraw: 60000,
-                        dailyDeposit: 60000,
-                        lastDailyReset: todayDate
-                    });
-                }
+                try {
+                    // Reset يومي
+                    if (number.lastDailyReset !== todayDate) {
+                        await updateDoc(docRef, {
+                            dailyWithdraw: 60000,
+                            dailyDeposit: 60000,
+                            lastDailyReset: todayDate
+                        });
+                    }
 
-                if (number.lastMonthlyReset !== currentMonth) {
-                    await updateDoc(docRef, {
-                        withdrawLimit: Number(number.originalWithdrawLimit) || 60000,
-                        depositLimit: Number(number.originalDepositLimit) || 60000,
-                        lastMonthlyReset: currentMonth
-                    });
+                    // Reset شهري
+                    if (Number(number.lastMonthlyReset) !== currentMonth) {
+                        await updateDoc(docRef, {
+                            withdrawLimit: Number(number.originalWithdrawLimit) || 60000,
+                            depositLimit: Number(number.originalDepositLimit) || 60000,
+                            lastMonthlyReset: currentMonth
+                        });
+                    }
+                } catch (error) {
+                    console.error(`خطأ أثناء التحديث للرقم ${number.id}:`, error);
                 }
             }
         };
@@ -111,6 +117,7 @@ function Numbers() {
             resetLimitsIfNeeded();
         }
     }, [numbers]);
+
 
     const handelAddNumber = async () => {
         if (phone !== "") {

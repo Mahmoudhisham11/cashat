@@ -177,7 +177,7 @@ function Wallet({ openWallet, setOpenWallet }) {
           </div>
           <div className="amounts">
             <div className="inputContainer">
-              <label>الليمت الشهري المتاح للاستلام :</label>
+              <label>الليمت الشهري :</label>
               <input
                 type="number"
                 value={Number(withdrawLimit)}
@@ -187,7 +187,7 @@ function Wallet({ openWallet, setOpenWallet }) {
               />
             </div>
             <div className="inputContainer">
-              <label>الليمت اليومي المتاح للاستلام :</label>
+              <label>الليمت اليومي :</label>
               <input
                 type="number"
                 value={Number(dailyWithdraw)}

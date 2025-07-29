@@ -185,7 +185,7 @@ function Cash({ openCash, setOpenCash }) {
 
           <div className="amounts">
             <div className="inputContainer">
-              <label>الليمت الشهري المتاح للإرسال :</label>
+              <label>الليمت الشهري :</label>
               <input
                 type="number"
                 value={Number(depositLimit)}
@@ -195,7 +195,7 @@ function Cash({ openCash, setOpenCash }) {
               />
             </div>
             <div className="inputContainer">
-              <label>الليمت اليومي المتاح للإرسال :</label>
+              <label>الليمت اليومي :</label>
               <input
                 type="number"
                 value={Number(dailyDeposit)}
