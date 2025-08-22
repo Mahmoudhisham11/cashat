@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { MdOutlineKeyboardArrowLeft } from "react-icons/md";
 import { HiQrcode } from "react-icons/hi";
 import { FaTrashAlt } from "react-icons/fa";
-import { IoReloadOutline } from "react-icons/io5";
+import { MdModeEditOutline } from "react-icons/md";
 import { db } from "../firebase";
 import { addDoc, collection, deleteDoc, doc, onSnapshot, query, updateDoc, where, getDocs } from "firebase/firestore";
 import QRCode from "react-qr-code";
@@ -29,6 +29,7 @@ function Numbers() {
 
     const [authorized, setAuthorized] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [editId, setEditId] = useState(null); // ⭐ لتحديد إذا كنا في وضع تعديل
 
     useEffect(() => {
         const checkLock = async () => {
@@ -83,32 +84,26 @@ function Numbers() {
     useEffect(() => {
         const resetLimitsIfNeeded = async () => {
             const today = new Date();
-            const todayDate = today.toLocaleDateString('en-CA'); // YYYY-MM-DD بالتوقيت المحلي
+            const todayDate =  today.toLocaleDateString('en-CA');
             const currentMonth = today.getMonth();
 
             for (const number of numbers) {
                 const docRef = doc(db, 'numbers', number.id);
 
-                try {
-                    // Reset يومي
-                    if (number.lastDailyReset !== todayDate) {
-                        await updateDoc(docRef, {
-                            dailyWithdraw: 60000,
-                            dailyDeposit: 60000,
-                            lastDailyReset: todayDate
-                        });
-                    }
+                if (number.lastDailyReset !== todayDate) {
+                    await updateDoc(docRef, {
+                        dailyWithdraw: 60000,
+                        dailyDeposit: 60000,
+                        lastDailyReset: todayDate
+                    });
+                }
 
-                    // Reset شهري
-                    if (Number(number.lastMonthlyReset) !== currentMonth) {
-                        await updateDoc(docRef, {
-                            withdrawLimit: Number(number.originalWithdrawLimit) || 60000,
-                            depositLimit: Number(number.originalDepositLimit) || 60000,
-                            lastMonthlyReset: currentMonth
-                        });
-                    }
-                } catch (error) {
-                    console.error(`خطأ أثناء التحديث للرقم ${number.id}:`, error);
+                if (number.lastMonthlyReset !== currentMonth) {
+                    await updateDoc(docRef, {
+                        withdrawLimit: Number(number.originalWithdrawLimit) || 60000,
+                        depositLimit: Number(number.originalDepositLimit) || 60000,
+                        lastMonthlyReset: currentMonth
+                    });
                 }
             }
         };
@@ -118,29 +113,61 @@ function Numbers() {
         }
     }, [numbers]);
 
-
+    // ⭐ إضافة/تعديل خط
     const handelAddNumber = async () => {
         if (phone !== "") {
-            await addDoc(collection(db, 'numbers'), {
-                phone,
-                name,
-                idNumber,
-                amount,
-                withdrawLimit: limit,
-                depositLimit: limit,
-                originalWithdrawLimit: limit,
-                originalDepositLimit: limit,
-                dailyWithdraw: 60000,
-                dailyDeposit: 60000,
-                userEmail,
-            });
-            alert('تم اضافة الرقم بنجاح');
+            if (editId) {
+                // تعديل
+                const docRef = doc(db, "numbers", editId);
+                await updateDoc(docRef, {
+                    phone,
+                    name,
+                    idNumber,
+                    amount,
+                    withdrawLimit: limit,
+                    depositLimit: limit,
+                    originalWithdrawLimit: limit,
+                    originalDepositLimit: limit,
+                    userEmail,
+                });
+                alert("تم تعديل البيانات بنجاح ✅");
+                setEditId(null);
+            } else {
+                // إضافة
+                await addDoc(collection(db, 'numbers'), {
+                    phone,
+                    name,
+                    idNumber,
+                    amount,
+                    withdrawLimit: limit,
+                    depositLimit: limit,
+                    originalWithdrawLimit: limit,
+                    originalDepositLimit: limit,
+                    dailyWithdraw: 60000,
+                    dailyDeposit: 60000,
+                    userEmail,
+                });
+                alert('تم اضافة الرقم بنجاح ✅');
+            }
+
+            // مسح الفورم
             setPhone('');
             setName('');
             setIdNumber('');
             setAmount('');
             setLimit('');
         }
+    };
+
+    // ⭐ تحميل بيانات الخط للتعديل
+    const handleEdit = (number) => {
+        setPhone(number.phone);
+        setName(number.name);
+        setIdNumber(number.idNumber);
+        setAmount(number.amount);
+        setLimit(number.originalWithdrawLimit || number.withdrawLimit);
+        setEditId(number.id);
+        setActive(0); // يفتح فورم التعديل تلقائي
     };
 
     const handleDelet = async (id) => {
@@ -220,7 +247,9 @@ function Numbers() {
                                 </div>
                             </div>
                         </div>
-                        <button className={styles.addBtn} onClick={handelAddNumber}>اكمل العملية</button>
+                        <button className={styles.addBtn} onClick={handelAddNumber}>
+                            {editId ? "تعديل البيانات" : "اكمل العملية"}
+                        </button>
                     </div>
                     <div className={styles.cardContent} style={{display: active === 1 ? 'flex' : 'none'}}>
                         <div className="inputContainer">
@@ -234,9 +263,10 @@ function Numbers() {
                         {filteredNumbers.map((number, index) => (
                             <div key={number.id} onClick={() => setOpenCard(openCard === index ? null : index)} className={openCard === index ? `${styles.numDiv} ${styles.open}` : `${styles.numDiv}`}>
                                 <div className={styles.divHeader}>
-                                    <h2 style={{color: Number(number.withdraw) + Number(number.deposit) >= 50000 ? 'red' : ''}}>{number.phone}</h2>
+                                    <h2>{number.phone}</h2>
                                     <div className={styles.btns}>
                                         <button onClick={() => handleQr(number.phone)}><HiQrcode/></button>
+                                        <button onClick={() => handleEdit(number)}><MdModeEditOutline/></button>
                                         <button onClick={() => handleDelet(number.id)}><FaTrashAlt/></button>
                                     </div>
                                 </div>
