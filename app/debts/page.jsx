@@ -28,30 +28,31 @@ function Debts() {
 
   // بيانات الديون
   const [debts, setDebts] = useState([]);
-  const [userEmail, setUserEmail] = useState("");
   const [editId, setEditId] = useState(null);
 
   // مجموعات
   const [totalLik, setTotalLik] = useState(0);
   const [totalAlyek, setTotalAlyek] = useState(0);
 
-  // جلب ايميل المستخدم من localStorage
+  // ⭐ state لتخزين email بشكل دائم
+  const [userEmail, setUserEmail] = useState("");
+
+  // جلب email مرة واحدة عند تحميل الصفحة
   useEffect(() => {
-    const email = localStorage.getItem("userEmail");
+    const email = localStorage.getItem("email");
     if (email) setUserEmail(email);
   }, []);
 
-  // تحميل البيانات من فايربيز
+  // تحميل البيانات بعد أن يكون userEmail موجود
   useEffect(() => {
-    if (userEmail) fetchDebts();
+    if (!userEmail) return;
+    fetchDebts();
   }, [userEmail]);
 
   const fetchDebts = async () => {
+    if (!userEmail) return;
     try {
-      const q = query(
-        collection(db, "debts"),
-        where("userEmail", "==", userEmail)
-      );
+      const q = query(collection(db, "debts"), where("userEmail", "==", userEmail));
       const querySnapshot = await getDocs(q);
       const data = querySnapshot.docs.map((doc) => ({
         id: doc.id,
@@ -74,8 +75,13 @@ function Debts() {
     }
   };
 
-  // اضافة / تعديل
+  // إضافة / تعديل
   const handleSubmit = async () => {
+    if (!userEmail) {
+      alert("⚠️ لم يتم التعرف على المستخدم، يرجى تسجيل الدخول مجددًا");
+      return;
+    }
+
     if (!clientName || !amount) {
       alert("⚠️ من فضلك املأ جميع الحقول");
       return;
@@ -85,18 +91,16 @@ function Debts() {
       clientName,
       amount: Number(amount),
       debtType,
-      userEmail,
+      userEmail, // ✅ هنا نضمن أنها موجودة من state وليس localStorage مباشرة
       date: new Date().toLocaleDateString("ar-EG"),
     };
 
     try {
       if (editId) {
-        // تعديل
         const debtRef = doc(db, "debts", editId);
         await updateDoc(debtRef, debtData);
         alert("✅ تم تعديل العميل");
       } else {
-        // اضافة
         await addDoc(collection(db, "debts"), debtData);
         alert("✅ تم اضافة العميل");
       }
@@ -131,7 +135,7 @@ function Debts() {
     setAmount(debt.amount);
     setDebtType(debt.debtType);
     setEditId(debt.id);
-    setActive(0); // يوديك على صفحة الادخال
+    setActive(0);
   };
 
   return (
@@ -144,7 +148,6 @@ function Debts() {
       </div>
 
       <div className={styles.content}>
-        {/* أزرار التنقل */}
         <div className={styles.btnsContainer}>
           {btns.map((btn, index) => (
             <button
@@ -157,44 +160,48 @@ function Debts() {
           ))}
         </div>
 
-        {/* صفحة الاضافة */}
+        {/* صفحة إضافة عميل */}
         <div
           className={styles.debtsInfo}
           style={{ display: active === 0 ? "flex" : "none" }}
         >
-          <div className={styles.info}>
-            <div className="inputContainer">
-              <label>اسم العميل:</label>
-              <input
-                type="text"
-                placeholder="ادخل اسم العميل"
-                value={clientName}
-                onChange={(e) => setClientName(e.target.value)}
-              />
+          {userEmail ? (
+            <div className={styles.info}>
+              <div className="inputContainer">
+                <label>اسم العميل:</label>
+                <input
+                  type="text"
+                  placeholder="ادخل اسم العميل"
+                  value={clientName}
+                  onChange={(e) => setClientName(e.target.value)}
+                />
+              </div>
+              <div className="inputContainer">
+                <label>المبلغ:</label>
+                <input
+                  type="number"
+                  placeholder="ادخل المبلغ"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                />
+              </div>
+              <div className="inputContainer">
+                <label>نوع الدين:</label>
+                <select
+                  value={debtType}
+                  onChange={(e) => setDebtType(e.target.value)}
+                >
+                  <option value="ليك">ليك</option>
+                  <option value="عليك">عليك</option>
+                </select>
+              </div>
+              <button onClick={handleSubmit} className={styles.addBtn}>
+                {editId ? "تعديل العميل" : "اضافة العميل"}
+              </button>
             </div>
-            <div className="inputContainer">
-              <label>المبلغ:</label>
-              <input
-                type="number"
-                placeholder="ادخل المبلغ"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-              />
-            </div>
-            <div className="inputContainer">
-              <label>نوع الدين:</label>
-              <select
-                value={debtType}
-                onChange={(e) => setDebtType(e.target.value)}
-              >
-                <option value="ليك">ليك</option>
-                <option value="عليك">عليك</option>
-              </select>
-            </div>
-            <button onClick={handleSubmit} className={styles.addBtn}>
-              {editId ? "تعديل العميل" : "اضافة العميل"}
-            </button>
-          </div>
+          ) : (
+            <p>⚠️ جاري التعرف على المستخدم...</p>
+          )}
         </div>
 
         {/* صفحة عرض الكل */}
