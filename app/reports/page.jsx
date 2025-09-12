@@ -3,7 +3,6 @@ import styles from "./styles.module.css";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { MdOutlineKeyboardArrowLeft } from "react-icons/md";
-import { IoIosArrowDown } from "react-icons/io";
 import { FaTrashAlt } from "react-icons/fa";
 import { db } from "../firebase";
 import {
@@ -23,7 +22,6 @@ function Reports() {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [phoneSearch, setPhoneSearch] = useState('');
-  const [active, setActive] = useState('');
   const [email, setEmail] = useState('');
   const [total, setTotal] = useState(0);
   const [authorized, setAuthorized] = useState(false);
@@ -68,24 +66,41 @@ function Reports() {
   }, []);
 
   useEffect(() => {
-    if (!authorized || !email || !dateFrom) return;
+    if (!authorized || !email) return;
 
     const q = query(collection(db, 'reports'), where('userEmail', '==', email));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const allReports = [];
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        const reportDate = new Date(data.date).toISOString().split('T')[0];
+      querySnapshot.forEach((docSnap) => {
+        const data = docSnap.data();
 
+        // تحديد التاريخ سواء كان createdAt (Timestamp) أو date (string)
+        let reportDate = null;
+        if (data.createdAt?.toDate) {
+          reportDate = data.createdAt.toDate().toISOString().split("T")[0];
+        } else if (data.date) {
+          const parsedDate = new Date(data.date);
+          if (!isNaN(parsedDate)) {
+            reportDate = parsedDate.toISOString().split("T")[0];
+          }
+        }
+
+        if (!reportDate) return; // تجاهل أي عملية من غير تاريخ
+
+        // فلترة حسب التاريخ والبحث
         if (
-          (!dateTo && reportDate === dateFrom) ||
-          (dateTo && reportDate >= dateFrom && reportDate <= dateTo)
+          (!dateFrom || reportDate >= dateFrom) &&
+          (!dateTo || reportDate <= dateTo)
         ) {
-          if (!phoneSearch || data.phone.includes(phoneSearch)) {
-            allReports.push({ ...data, id: doc.id });
+          if (!phoneSearch || data.phone?.includes(phoneSearch)) {
+            allReports.push({ ...data, id: docSnap.id, reportDate });
           }
         }
       });
+
+      // ترتيب حسب التاريخ تنازلي
+      allReports.sort((a, b) => new Date(b.reportDate) - new Date(a.reportDate));
+
       setReports(allReports);
     });
 
@@ -93,7 +108,7 @@ function Reports() {
   }, [authorized, dateFrom, dateTo, phoneSearch, email]);
 
   useEffect(() => {
-    const subTotal = reports.reduce((acc, report) => acc + Number(report.commation), 0);
+    const subTotal = reports.reduce((acc, report) => acc + Number(report.commation || 0), 0);
     setTotal(subTotal);
   }, [reports]);
 
@@ -138,27 +153,37 @@ function Reports() {
         <div className={styles.content}>
           <div className={styles.contentTitle}>
             <h2>اجمالي الارباح : {total} جنية</h2>
-            <button onClick={handleDeleteAllReports}><FaTrashAlt/></button>
-          </div>
-
-          {reports.map((report, index) => (
-            <div
-              className={active === index ? `${styles.card} ${styles.active}` : styles.card}
-              key={report.id}
-              onClick={() => setActive(active === index ? null : index)}
-            >
-              <div className={styles.cardHead}>
-                <h2>{report.phone}</h2>
-                <h2><IoIosArrowDown /></h2>
-              </div>
-              <hr />
-              <div className={styles.cardBody}>
-                <p><span>نوع العملية : </span><strong>{report.type}</strong></p>
-                <p><span>المبلغ : </span><strong>{report.operationVal} جنية</strong></p>
-                <p><span>العمولة : </span><strong>{report.commation} جنية</strong></p>
-              </div>
+            <div className={styles.btnsContainer}>
+              <button onClick={() => window.print()}>PDF</button>
+              <button onClick={handleDeleteAllReports}><FaTrashAlt/></button>
             </div>
-          ))}
+          </div>
+          <div className={styles.tableContainer}>
+              <table>
+                <thead>
+                  <tr>
+                    <th>الرقم</th>
+                    <th>العملية</th>
+                    <th>المبلغ</th>
+                    <th>العمولة</th>
+                    <th>ملاحظات</th>
+                    <th>التاريخ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {reports.map((report) => (
+                    <tr key={report.id}>
+                      <td>{report.phone || "-"}</td>
+                      <td>{report.type || "-"}</td>
+                      <td>{report.operationVal || 0} جنية</td>
+                      <td>{report.commation || 0} جنية</td>
+                      <td>{report.notes || "-"}</td>
+                      <td>{report.reportDate}</td>
+                    </tr>
+                  ))}
+                </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

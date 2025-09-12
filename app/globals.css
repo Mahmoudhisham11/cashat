@@ -304,3 +304,9 @@ tbody tr:nth-child(even) {
         font-size: 20px;
     }
 }
+
+@media print {
+  .header {
+    display: none;
+  }
+}

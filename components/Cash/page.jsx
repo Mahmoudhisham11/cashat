@@ -12,6 +12,7 @@ import {
   updateDoc,
   where,
   onSnapshot,
+  serverTimestamp,
 } from "firebase/firestore";
 
 function Cash({ openCash, setOpenCash }) {
@@ -23,6 +24,7 @@ function Cash({ openCash, setOpenCash }) {
   const [dailyDeposit, setDailyDeposit] = useState("");
   const [userEmail, setUserEmail] = useState("");
   const [phoneNumbers, setPhoneNumbers] = useState([]);
+  const [notes, setNotes] = useState(""); // ✅ إضافة حقل الملاحظات
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -92,8 +94,10 @@ function Cash({ openCash, setOpenCash }) {
         commation,
         operationVal,
         phone,
+        notes, // ✅ تخزين الملاحظات
         type: "ارسال",
         date: new Date().toISOString().split("T")[0],
+        createdAt: serverTimestamp(), // ✅ تخزين وقت العملية
       });
 
       await updateDoc(userRef, {
@@ -122,6 +126,7 @@ function Cash({ openCash, setOpenCash }) {
       setCommation("");
       setOperationVal("");
       setPhone("");
+      setNotes(""); // ✅ مسح الملاحظات بعد العملية
     }
   };
 
@@ -136,20 +141,28 @@ function Cash({ openCash, setOpenCash }) {
 
       <div className="operationBox">
         <div className="operationsContent">
-          <div className="inputContainer">
-            <label>ادخل رقم الشريحة :</label>
-            <input
-              type="number"
-              list="numbers"
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="ابحث عن رقم المحفظة"
-              value={phone}
-            />
-            <datalist id="numbers">
-              {phoneNumbers.map((item, index) => (
-                <option key={index} value={item.phone} />
-              ))}
-            </datalist>
+          <div className="amounts">
+            <div className="inputContainer">
+              <label>اختر رقم الشريحة :</label>
+              {/* ✅ استبدال datalist بـ select */}
+              <select value={phone} onChange={(e) => setPhone(e.target.value)}>
+                <option value="">-- اختر رقم --</option>
+                {phoneNumbers.map((item) => (
+                  <option key={item.id} value={item.phone}>
+                    {item.phone}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="inputContainer">
+              <label>ملاحظات :</label>
+              <input
+                type="text"
+                placeholder="ملاحظات"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+              />
+            </div>
           </div>
 
           <div className="amounts">
@@ -185,7 +198,7 @@ function Cash({ openCash, setOpenCash }) {
 
           <div className="amounts">
             <div className="inputContainer">
-              <label>الليمت الشهري :</label>
+              <label>الشهري :</label>
               <input
                 type="number"
                 value={Number(depositLimit)}
@@ -195,7 +208,7 @@ function Cash({ openCash, setOpenCash }) {
               />
             </div>
             <div className="inputContainer">
-              <label>الليمت اليومي :</label>
+              <label>اليومي :</label>
               <input
                 type="number"
                 value={Number(dailyDeposit)}
