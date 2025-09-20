@@ -24,7 +24,8 @@ function Cash({ openCash, setOpenCash }) {
   const [dailyDeposit, setDailyDeposit] = useState("");
   const [userEmail, setUserEmail] = useState("");
   const [phoneNumbers, setPhoneNumbers] = useState([]);
-  const [notes, setNotes] = useState(""); // ✅ إضافة حقل الملاحظات
+  const [notes, setNotes] = useState(""); 
+  const [receiver, setReceiver] = useState("");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -94,10 +95,11 @@ function Cash({ openCash, setOpenCash }) {
         commation,
         operationVal,
         phone,
-        notes, // ✅ تخزين الملاحظات
+        notes,
+        receiver,
         type: "ارسال",
         date: new Date().toISOString().split("T")[0],
-        createdAt: serverTimestamp(), // ✅ تخزين وقت العملية
+        createdAt: serverTimestamp(),
       });
 
       await updateDoc(userRef, {
@@ -126,7 +128,8 @@ function Cash({ openCash, setOpenCash }) {
       setCommation("");
       setOperationVal("");
       setPhone("");
-      setNotes(""); // ✅ مسح الملاحظات بعد العملية
+      setNotes(""); 
+      setReceiver("");
     }
   };
 
@@ -139,20 +142,28 @@ function Cash({ openCash, setOpenCash }) {
         <h2>عملية ارسال</h2>
       </div>
 
-      <div className="operationBox">
+       <div className="operationBox">
         <div className="operationsContent">
+          <div className="inputContainer">
+            <label>اختر رقم الشريحة :</label>
+            <select value={phone} onChange={(e) => setPhone(e.target.value)}>
+              <option value="">-- اختر رقم --</option>
+              {phoneNumbers.map((item) => (
+                <option key={item.id} value={item.phone}>
+                  {item.phone}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="amounts">
             <div className="inputContainer">
-              <label>اختر رقم الشريحة :</label>
-              {/* ✅ استبدال datalist بـ select */}
-              <select value={phone} onChange={(e) => setPhone(e.target.value)}>
-                <option value="">-- اختر رقم --</option>
-                {phoneNumbers.map((item) => (
-                  <option key={item.id} value={item.phone}>
-                    {item.phone}
-                  </option>
-                ))}
-              </select>
+              <label>المرسل:</label>
+              <input
+                type="text"
+                value={receiver}
+                placeholder="اكتب اسم المرسل إليه"
+                onChange={(e) => setReceiver(e.target.value)}
+              />
             </div>
             <div className="inputContainer">
               <label>ملاحظات :</label>

@@ -57,11 +57,36 @@
 .info {
     width: 100%;
 }
-.totals {
+.headContainer {
     width: 100%;
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+.totals {
+    width: 100%;
+    display: flex;
+    justify-content: start;
+    align-items: start;
+    flex-direction: column;
+}
+.headBtns button {
+    width: 55px;
+    height: 40px;
+    border: none;
+    font-size: 20px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(122, 255, 122, 0.37);
+    color: rgb(2, 145, 2);
+    transition: .3s;
+    cursor: pointer;
+}
+.headBtns button:hover {
+    background-color: green;
+    color: white;
 }
 .debtsContent {
     width: 100%;

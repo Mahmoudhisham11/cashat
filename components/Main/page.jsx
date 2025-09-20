@@ -134,8 +134,9 @@ const unsubOp = onSnapshot(opQ, (qs) => {
     const walletTotal = nums.reduce((acc, n) => acc + Number(n.amount || 0), 0);
     setProfit(subTotal);
     setWallet(walletTotal);
-    setCapital(walletTotal + Number(cash || 0));
+    setCapital(walletTotal + Number(cash || 0) + subTotal);
   }, [operations, nums, cash]);
+
 
   // HIDE / SHOW AMOUNTS (with lock password)
   const handleToggleAmounts = async () => {
@@ -396,6 +397,7 @@ const unsubOp = onSnapshot(opQ, (qs) => {
                 <th>العملية</th>
                 <th>المبلغ</th>
                 <th>العمولة</th>
+                <th>المرسل اليه</th>
                 <th>ملاحظات</th>
                 <th>التاريخ</th>
                 <th>حذف</th>
@@ -409,6 +411,7 @@ const unsubOp = onSnapshot(opQ, (qs) => {
                     <td>{operation.type || "-"}</td>
                     <td>{operation.operationVal ? `${operation.operationVal} جنية` : "-"}</td>
                     <td>{operation.commation ? `${operation.commation} جنية` : "-"}</td>
+                    <td>{operation.receiver || "-"}</td>
                     <td>{operation.notes || "-"}</td>
                     <td>{formatDate(operation.createdAt)}</td>
                     <td>

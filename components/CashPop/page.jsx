@@ -2,7 +2,7 @@
 import styles from "./styles.module.css";
 import { IoIosCloseCircle } from "react-icons/io";
 import { db } from "../../app/firebase";
-import { addDoc, collection, doc, getDocs, query, updateDoc, where } from "firebase/firestore";
+import { addDoc, collection, doc, getDocs, query, updateDoc, where, serverTimestamp } from "firebase/firestore";
 import { useState, useEffect } from "react";
 
 function CashPop({ openCash, setOpenCash }) {
@@ -54,14 +54,32 @@ function CashPop({ openCash, setOpenCash }) {
   }, [userEmail, openCash]);
 
   const handleUpdateCash = async () => {
+    if (!cashVal) {
+      alert("من فضلك ادخل قيمة صحيحة");
+      return;
+    }
+
     const q = query(collection(db, "users"), where("email", "==", userEmail));
     const querySnapshot = await getDocs(q);
+
     if (!querySnapshot.empty) {
       const userDoc = querySnapshot.docs[0];
       const userRef = doc(db, "users", userDoc.id);
+
+      // 1. تعديل قيمة النقدي عند المستخدم
       await updateDoc(userRef, { cash: Number(cashVal) });
-      alert("تم تعديل قيمة المحفظة النقدية");
+
+      // 2. تسجيل العملية كعملية نقدية عادية
+      await addDoc(collection(db, "operations"), {
+        operationVal: Number(cashVal),
+        type: "تعديل نقدي",
+        createdAt: serverTimestamp(),
+        userEmail,
+      });
+
+      alert("✅ تم تعديل قيمة النقدي وتسجيل العملية");
       setCashVal("");
+      setOpenCash(false);
     }
   };
 

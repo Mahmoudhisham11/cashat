@@ -17,6 +17,10 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase";
 
+// ✅ استيراد مكتبة الاكسيل
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+
 function Debts() {
   const btns = ["اضف عميل جديد", "كل العملاء"];
   const [active, setActive] = useState(0);
@@ -91,7 +95,7 @@ function Debts() {
       clientName,
       amount: Number(amount),
       debtType,
-      userEmail, // ✅ هنا نضمن أنها موجودة من state وليس localStorage مباشرة
+      userEmail,
       date: new Date().toLocaleDateString("ar-EG"),
     };
 
@@ -136,6 +140,29 @@ function Debts() {
     setDebtType(debt.debtType);
     setEditId(debt.id);
     setActive(0);
+  };
+
+  // ✅ دالة تصدير البيانات إلى Excel
+  const exportToExcel = () => {
+    const data = debts.map((debt) => ({
+      "اسم العميل": debt.clientName,
+      "المبلغ": debt.amount,
+      "النوع": debt.debtType,
+      "التاريخ": debt.date,
+    }));
+
+    // إضافة الإجماليات
+    data.push({});
+    data.push({ "اسم العميل": "الإجمالي ليك", "المبلغ": totalLik });
+    data.push({ "اسم العميل": "الإجمالي عليك", "المبلغ": totalAlyek });
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "الديون");
+
+    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    const dataBlob = new Blob([excelBuffer], { type: "application/octet-stream" });
+    saveAs(dataBlob, `الديون_${new Date().toLocaleDateString("ar-EG")}.xlsx`);
   };
 
   return (
@@ -209,9 +236,14 @@ function Debts() {
           className={styles.debtsContent}
           style={{ display: active === 1 ? "flex" : "none" }}
         >
-          <div className={styles.totals}>
-            <strong>ليك: {totalLik} ج.م</strong>
-            <strong>عليك: {totalAlyek} ج.م</strong>
+          <div className={styles.headContainer}>
+            <div className={styles.totals}>
+              <strong>ليك: {totalLik} ج.م</strong>
+              <strong>عليك: {totalAlyek} ج.م</strong>
+            </div>
+            <div className={styles.headBtns}>
+              <button onClick={exportToExcel}>Excel</button>
+            </div>
           </div>
           <div className={styles.tableContainer}>
             <table>

@@ -16,12 +16,17 @@ import {
 } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 
+// مكتبة Excel
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+
 function Reports() {
   const router = useRouter();
   const [reports, setReports] = useState([]);
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [phoneSearch, setPhoneSearch] = useState('');
+  const [operationFilter, setOperationFilter] = useState('');
   const [email, setEmail] = useState('');
   const [total, setTotal] = useState(0);
   const [authorized, setAuthorized] = useState(false);
@@ -74,7 +79,6 @@ function Reports() {
       querySnapshot.forEach((docSnap) => {
         const data = docSnap.data();
 
-        // تحديد التاريخ سواء كان createdAt (Timestamp) أو date (string)
         let reportDate = null;
         if (data.createdAt?.toDate) {
           reportDate = data.createdAt.toDate().toISOString().split("T")[0];
@@ -85,9 +89,8 @@ function Reports() {
           }
         }
 
-        if (!reportDate) return; // تجاهل أي عملية من غير تاريخ
+        if (!reportDate) return;
 
-        // فلترة حسب التاريخ والبحث
         if (
           (!dateFrom || reportDate >= dateFrom) &&
           (!dateTo || reportDate <= dateTo)
@@ -98,7 +101,6 @@ function Reports() {
         }
       });
 
-      // ترتيب حسب التاريخ تنازلي
       allReports.sort((a, b) => new Date(b.reportDate) - new Date(a.reportDate));
 
       setReports(allReports);
@@ -108,9 +110,14 @@ function Reports() {
   }, [authorized, dateFrom, dateTo, phoneSearch, email]);
 
   useEffect(() => {
-    const subTotal = reports.reduce((acc, report) => acc + Number(report.commation || 0), 0);
+    let filteredReports = reports;
+    if (operationFilter) {
+      filteredReports = reports.filter((r) => r.type === operationFilter);
+    }
+
+    const subTotal = filteredReports.reduce((acc, report) => acc + Number(report.commation || 0), 0);
     setTotal(subTotal);
-  }, [reports]);
+  }, [reports, operationFilter]);
 
   const handleDeleteAllReports = async () => {
     const confirmDelete = confirm("هل أنت متأكد أنك تريد حذف جميع التقارير؟ لا يمكن التراجع.");
@@ -131,6 +138,46 @@ function Reports() {
     }
   };
 
+  // 🚀 تصدير البيانات لملف Excel مع إضافة الإجمالي
+  const handleExportExcel = () => {
+    if (reports.length === 0) {
+      alert("⚠️ لا يوجد بيانات للتصدير");
+      return;
+    }
+
+    let filteredReports = reports;
+    if (operationFilter) {
+      filteredReports = reports.filter((r) => r.type === operationFilter);
+    }
+
+    const worksheetData = filteredReports.map((report) => ({
+      الرقم: report.phone || "-",
+      العملية: report.type || "-",
+      المبلغ: `${report.operationVal || 0} جنية`,
+      العمولة: `${report.commation || 0} جنية`,
+      الملاحظات: report.notes || "-",
+      التاريخ: report.reportDate,
+    }));
+
+    // ✅ إضافة صف الإجمالي
+    worksheetData.push({
+      الرقم: "الإجمالي",
+      العملية: "-",
+      المبلغ: "-",
+      العمولة: `${total} جنية`,
+      الملاحظات: "-",
+      التاريخ: "-",
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Reports");
+
+    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+    saveAs(data, `reports_${new Date().toISOString().split("T")[0]}.xlsx`);
+  };
+
   if (loading) return <p>🔄 جاري التحقق...</p>;
   if (!authorized) return null;
 
@@ -145,9 +192,18 @@ function Reports() {
         </div>
 
         <div className={styles.inputContainer}>
-          <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
-          <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
-          <input type="number" placeholder="ابحث برقم الهاتف" onChange={(e) => setPhoneSearch(e.target.value)} />
+          <div className={styles.inputBox}>
+            <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+            <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+          </div>
+          <div className={styles.inputBox}>
+            <input type="number" placeholder="ابحث برقم الهاتف" onChange={(e) => setPhoneSearch(e.target.value)} />
+            <select value={operationFilter} onChange={(e) => setOperationFilter(e.target.value)}>
+              <option value="">الكل</option>
+              <option value="استلام">استلام</option>
+              <option value="ارسال">ارسال</option>
+            </select>
+          </div>
         </div>
 
         <div className={styles.content}>
@@ -155,6 +211,7 @@ function Reports() {
             <h2>اجمالي الارباح : {total} جنية</h2>
             <div className={styles.btnsContainer}>
               <button onClick={() => window.print()}>PDF</button>
+              <button onClick={handleExportExcel}>Excel</button>
               <button onClick={handleDeleteAllReports}><FaTrashAlt/></button>
             </div>
           </div>
@@ -171,16 +228,18 @@ function Reports() {
                   </tr>
                 </thead>
                 <tbody>
-                  {reports.map((report) => (
-                    <tr key={report.id}>
-                      <td>{report.phone || "-"}</td>
-                      <td>{report.type || "-"}</td>
-                      <td>{report.operationVal || 0} جنية</td>
-                      <td>{report.commation || 0} جنية</td>
-                      <td>{report.notes || "-"}</td>
-                      <td>{report.reportDate}</td>
-                    </tr>
-                  ))}
+                  {reports
+                    .filter((report) => !operationFilter || report.type === operationFilter)
+                    .map((report) => (
+                      <tr key={report.id}>
+                        <td>{report.phone || "-"}</td>
+                        <td>{report.type || "-"}</td>
+                        <td>{report.operationVal || 0} جنية</td>
+                        <td>{report.commation || 0} جنية</td>
+                        <td>{report.notes || "-"}</td>
+                        <td>{report.reportDate}</td>
+                      </tr>
+                    ))}
                 </tbody>
             </table>
           </div>

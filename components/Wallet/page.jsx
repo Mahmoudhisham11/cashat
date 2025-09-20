@@ -19,7 +19,8 @@ function Wallet({ openWallet, setOpenWallet }) {
   const [phone, setPhone] = useState("");
   const [operationVal, setOperationVal] = useState("");
   const [commation, setCommation] = useState("");
-  const [notes, setNotes] = useState(""); // ✅ ملاحظات
+  const [notes, setNotes] = useState(""); 
+  const [receiver, setReceiver] = useState(""); 
   const [userEmail, setUserEmail] = useState("");
   const [phoneNumbers, setPhoneNumbers] = useState([]);
   const [withdrawLimit, setWithdrawLimit] = useState("");
@@ -84,7 +85,7 @@ function Wallet({ openWallet, setOpenWallet }) {
       const userData = userDoc.data();
       const userRef = doc(db, "users", userDoc.id);
 
-      // ✅ إضافة createdAt + notes
+      // ✅ إضافة createdAt + notes + receiver
       await addDoc(collection(db, "operations"), {
         userEmail,
         commation,
@@ -92,6 +93,7 @@ function Wallet({ openWallet, setOpenWallet }) {
         phone,
         type: "استلام",
         notes,
+        receiver,
         createdAt: serverTimestamp(),
       });
 
@@ -121,7 +123,8 @@ function Wallet({ openWallet, setOpenWallet }) {
       setPhone("");
       setCommation("");
       setOperationVal("");
-      setNotes(""); // ✅ مسح الملاحظات
+      setNotes("");
+      setReceiver(""); // ✅ مسح المرسل إليه
     }
   };
 
@@ -135,18 +138,27 @@ function Wallet({ openWallet, setOpenWallet }) {
       </div>
       <div className="operationBox">
         <div className="operationsContent">
+          <div className="inputContainer">
+            <label>اختر رقم الشريحة :</label>
+            <select value={phone} onChange={(e) => setPhone(e.target.value)}>
+              <option value="">اختر رقم</option>
+              {phoneNumbers.map((item) => (
+                <option key={item.id} value={item.phone}>
+                  {item.phone}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div className="amounts">
             <div className="inputContainer">
-              <label>اختر رقم الشريحة :</label>
-              {/* ✅ استبدال datalist بـ select */}
-              <select value={phone} onChange={(e) => setPhone(e.target.value)}>
-                <option value="">اختر رقم</option>
-                {phoneNumbers.map((item) => (
-                  <option key={item.id} value={item.phone}>
-                    {item.phone}
-                  </option>
-                ))}
-              </select>
+              <label>المرسل:</label>
+              <input
+                type="text"
+                value={receiver}
+                placeholder="اكتب اسم المرسل إليه"
+                onChange={(e) => setReceiver(e.target.value)}
+              />
             </div>
             <div className="inputContainer">
               <label>ملاحظات :</label>
@@ -158,6 +170,7 @@ function Wallet({ openWallet, setOpenWallet }) {
               />
             </div>
           </div>
+
           <div className="amounts">
             <div className="inputContainer">
               <label>المبلغ :</label>
@@ -188,6 +201,7 @@ function Wallet({ openWallet, setOpenWallet }) {
               />
             </div>
           </div>
+
           <div className="amounts">
             <div className="inputContainer">
               <label>الشهري :</label>
