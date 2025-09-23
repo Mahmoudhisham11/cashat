@@ -8,7 +8,6 @@ import { db } from "../firebase";
 import {
   collection,
   getDocs,
-  onSnapshot,
   query,
   where,
   deleteDoc,
@@ -70,43 +69,47 @@ function Reports() {
     checkLockAndSetEmail();
   }, []);
 
-  useEffect(() => {
+  // دالة لجلب التقارير باستخدام getDocs
+  const fetchReports = async () => {
     if (!authorized || !email) return;
 
     const q = query(collection(db, 'reports'), where('userEmail', '==', email));
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const allReports = [];
-      querySnapshot.forEach((docSnap) => {
-        const data = docSnap.data();
+    const querySnapshot = await getDocs(q);
 
-        let reportDateTime = null;
-        if (data.createdAt?.toDate) {
-          reportDateTime = data.createdAt.toDate().toLocaleString("ar-EG");
-        } else if (data.date) {
-          const parsedDate = new Date(data.date);
-          if (!isNaN(parsedDate)) {
-            reportDateTime = parsedDate.toLocaleString("ar-EG");
-          }
+    const allReports = [];
+    querySnapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+
+      let reportDateTime = null;
+      if (data.createdAt?.toDate) {
+        reportDateTime = data.createdAt.toDate().toLocaleString("ar-EG");
+      } else if (data.date) {
+        const parsedDate = new Date(data.date);
+        if (!isNaN(parsedDate)) {
+          reportDateTime = parsedDate.toLocaleString("ar-EG");
         }
+      }
 
-        if (!reportDateTime) return;
+      if (!reportDateTime) return;
 
-        if (
-          (!dateFrom || new Date(reportDateTime) >= new Date(dateFrom)) &&
-          (!dateTo || new Date(reportDateTime) <= new Date(dateTo))
-        ) {
-          if (!phoneSearch || data.phone?.includes(phoneSearch)) {
-            allReports.push({ ...data, id: docSnap.id, reportDateTime });
-          }
+      if (
+        (!dateFrom || new Date(reportDateTime) >= new Date(dateFrom)) &&
+        (!dateTo || new Date(reportDateTime) <= new Date(dateTo))
+      ) {
+        if (!phoneSearch || data.phone?.includes(phoneSearch)) {
+          allReports.push({ ...data, id: docSnap.id, reportDateTime });
         }
-      });
-
-      allReports.sort((a, b) => new Date(b.reportDateTime) - new Date(a.reportDateTime));
-
-      setReports(allReports);
+      }
     });
 
-    return () => unsubscribe();
+    allReports.sort((a, b) => new Date(b.reportDateTime) - new Date(a.reportDateTime));
+
+    setReports(allReports);
+  };
+
+  // اجلب البيانات لما الفلاتر أو الايميل تتغير
+  useEffect(() => {
+    fetchReports();
   }, [authorized, dateFrom, dateTo, phoneSearch, email]);
 
   useEffect(() => {
@@ -132,92 +135,80 @@ function Reports() {
 
       await Promise.all(deletePromises);
       alert("✅ تم حذف جميع التقارير بنجاح");
+      fetchReports(); // تحديث البيانات بعد الحذف
     } catch (error) {
       console.error("❌ حدث خطأ أثناء الحذف:", error);
       alert("حدث خطأ أثناء حذف التقارير");
     }
   };
 
-  // 🚀 تصدير البيانات لملف Excel بجدولين (ارسال + استلام)
-const handleExportExcel = () => {
-  if (reports.length === 0) {
-    alert("⚠️ لا يوجد بيانات للتصدير");
-    return;
-  }
+  // 🚀 تصدير البيانات لملف Excel (جدولين في شيت واحد)
+  const handleExportExcel = () => {
+    if (reports.length === 0) {
+      alert("⚠️ لا يوجد بيانات للتصدير");
+      return;
+    }
 
-  // فلترة العمليات حسب الاختيار (إرسال/استلام)
-  let filteredReports = operationFilter
-    ? reports.filter((r) => r.type === operationFilter)
-    : reports;
+    let filteredReports = operationFilter
+      ? reports.filter((r) => r.type === operationFilter)
+      : reports;
 
-  // تقسيم البيانات لإرسال واستلام
-  const sendReports = filteredReports.filter((r) => r.type === "ارسال");
-  const receiveReports = filteredReports.filter((r) => r.type === "استلام");
+    const sendReports = filteredReports.filter((r) => r.type === "ارسال");
+    const receiveReports = filteredReports.filter((r) => r.type === "استلام");
 
-  // حساب إجمالي العمولة
-  const sumSend = sendReports.reduce((acc, r) => acc + Number(r.commation || 0), 0);
-  const sumReceive = receiveReports.reduce((acc, r) => acc + Number(r.commation || 0), 0);
+    const sumSend = sendReports.reduce((acc, r) => acc + Number(r.commation || 0), 0);
+    const sumReceive = receiveReports.reduce((acc, r) => acc + Number(r.commation || 0), 0);
 
-  // تجهيز بيانات جدول الاستلام
-  const receiveSheetData = [
-    { "---": "📌 جدول الاستلام" },
-    ...receiveReports.map((report) => ({
-      الرقم: report.phone || "-",
-      العملية: report.type || "-",
-      المبلغ: `${report.operationVal || 0} جنية`,
-      العمولة: `${report.commation || 0} جنية`,
-      الملاحظات: report.notes || "-",
-      "التاريخ والوقت": report.reportDateTime || "-",
-    })),
-    {
-      الرقم: "الإجمالي",
-      العملية: "-",
-      المبلغ: "-",
-      العمولة: `${sumReceive} جنية`,
-      الملاحظات: "-",
-      "التاريخ والوقت": "-",
-    },
-    {}, // صف فاصل فاضي
-  ];
+    const receiveSheetData = [
+      { "---": "📌 جدول الاستلام" },
+      ...receiveReports.map((report) => ({
+        الرقم: report.phone || "-",
+        العملية: report.type || "-",
+        المبلغ: `${report.operationVal || 0} جنية`,
+        العمولة: `${report.commation || 0} جنية`,
+        الملاحظات: report.notes || "-",
+        "التاريخ والوقت": report.reportDateTime || "-",
+      })),
+      {
+        الرقم: "الإجمالي",
+        العملية: "-",
+        المبلغ: "-",
+        العمولة: `${sumReceive} جنية`,
+        الملاحظات: "-",
+        "التاريخ والوقت": "-",
+      },
+      {}, 
+    ];
 
-  // تجهيز بيانات جدول الإرسال
-  const sendSheetData = [
-    { "---": "📌 جدول الإرسال" },
-    ...sendReports.map((report) => ({
-      الرقم: report.phone || "-",
-      العملية: report.type || "-",
-      المبلغ: `${report.operationVal || 0} جنية`,
-      العمولة: `${report.commation || 0} جنية`,
-      الملاحظات: report.notes || "-",
-      "التاريخ والوقت": report.reportDateTime || "-",
-    })),
-    {
-      الرقم: "الإجمالي",
-      العملية: "-",
-      المبلغ: "-",
-      العمولة: `${sumSend} جنية`,
-      الملاحظات: "-",
-      "التاريخ والوقت": "-",
-    },
-  ];
+    const sendSheetData = [
+      { "---": "📌 جدول الإرسال" },
+      ...sendReports.map((report) => ({
+        الرقم: report.phone || "-",
+        العملية: report.type || "-",
+        المبلغ: `${report.operationVal || 0} جنية`,
+        العمولة: `${report.commation || 0} جنية`,
+        الملاحظات: report.notes || "-",
+        "التاريخ والوقت": report.reportDateTime || "-",
+      })),
+      {
+        الرقم: "الإجمالي",
+        العملية: "-",
+        المبلغ: "-",
+        العمولة: `${sumSend} جنية`,
+        الملاحظات: "-",
+        "التاريخ والوقت": "-",
+      },
+    ];
 
-  // دمج الجدولين في شيت واحد
-  const sheetData = [...receiveSheetData, ...sendSheetData];
+    const sheetData = [...receiveSheetData, ...sendSheetData];
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.json_to_sheet(sheetData);
+    XLSX.utils.book_append_sheet(workbook, worksheet, "التقارير");
 
-  // إنشاء الملف
-  const workbook = XLSX.utils.book_new();
-  const worksheet = XLSX.utils.json_to_sheet(sheetData);
-
-  // إضافة الشيت
-  XLSX.utils.book_append_sheet(workbook, worksheet, "التقارير");
-
-  // حفظ الملف
-  const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-  const data = new Blob([excelBuffer], { type: "application/octet-stream" });
-  saveAs(data, `reports_${new Date().toISOString().split("T")[0]}.xlsx`);
-};
-
-
+    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+    saveAs(data, `reports_${new Date().toISOString().split("T")[0]}.xlsx`);
+  };
 
   if (loading) return <p>🔄 جاري التحقق...</p>;
   if (!authorized) return null;
