@@ -22,7 +22,6 @@ import {
   getDoc,
   updateDoc,
   addDoc,
-  orderBy
 } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 
@@ -93,33 +92,31 @@ function Main() {
       setNums(arr);
     });
 
-    // operations ordered by createdAt desc (الأحدث أولًا)
     const opQ = query(
-  collection(db, 'operations'),
-  where('userEmail', '==', userEmail)
-);
+      collection(db, 'operations'),
+      where('userEmail', '==', userEmail)
+    );
 
-const unsubOp = onSnapshot(opQ, (qs) => {
-  const arr = qs.docs.map((d) => ({ ...d.data(), id: d.id }));
+    const unsubOp = onSnapshot(opQ, (qs) => {
+      const arr = qs.docs.map((d) => ({ ...d.data(), id: d.id }));
 
-  // ترتيب: الأحدث createdAt الأول، ولو العملية قديمة مافيهاش createdAt تتحط في الآخر
-  arr.sort((a, b) => {
-    if (a.createdAt && b.createdAt) {
-      const aTime = typeof a.createdAt.toMillis === "function"
-        ? a.createdAt.toMillis()
-        : a.createdAt.seconds * 1000;
-      const bTime = typeof b.createdAt.toMillis === "function"
-        ? b.createdAt.toMillis()
-        : b.createdAt.seconds * 1000;
-      return bTime - aTime; // تنازلي (الأحدث فوق)
-    }
-    if (a.createdAt) return -1;
-    if (b.createdAt) return 1;
-    return 0;
-  });
+      arr.sort((a, b) => {
+        if (a.createdAt && b.createdAt) {
+          const aTime = typeof a.createdAt.toMillis === "function"
+            ? a.createdAt.toMillis()
+            : a.createdAt.seconds * 1000;
+          const bTime = typeof b.createdAt.toMillis === "function"
+            ? b.createdAt.toMillis()
+            : b.createdAt.seconds * 1000;
+          return bTime - aTime;
+        }
+        if (a.createdAt) return -1;
+        if (b.createdAt) return 1;
+        return 0;
+      });
 
-  setOperations(arr);
-});
+      setOperations(arr);
+    });
 
     return () => {
       try { unsubUser(); } catch (e) {}
@@ -136,7 +133,6 @@ const unsubOp = onSnapshot(opQ, (qs) => {
     setWallet(walletTotal);
     setCapital(walletTotal + Number(cash || 0) + subTotal);
   }, [operations, nums, cash]);
-
 
   // HIDE / SHOW AMOUNTS (with lock password)
   const handleToggleAmounts = async () => {
@@ -170,26 +166,22 @@ const unsubOp = onSnapshot(opQ, (qs) => {
 
   const formatValue = (value) => hideAmounts ? "***" : `${value}.00 جنية`;
 
-  // helper to format createdAt safely
   const formatDate = (createdAt) => {
     if (!createdAt) return "-";
     try {
-      // Firestore Timestamp has toDate()
       if (typeof createdAt.toDate === "function") {
         return createdAt.toDate().toLocaleString("ar-EG");
       }
-      // old style object with seconds
       if (createdAt.seconds) {
         return new Date(createdAt.seconds * 1000).toLocaleString("ar-EG");
       }
-      // fallback: assume it's a string/date
       return new Date(createdAt).toLocaleString("ar-EG");
     } catch (e) {
       return "-";
     }
   };
 
-  // DELETE SINGLE OPERATION (with reverting amounts & checks)
+  // DELETE SINGLE OPERATION
   const handelDelete = async (id) => {
     try {
       const confirmDelete = window.confirm(
@@ -197,7 +189,6 @@ const unsubOp = onSnapshot(opQ, (qs) => {
       );
       if (!confirmDelete) return;
 
-      // جلب العملية
       const opRef = doc(db, "operations", id);
       const opSnap = await getDoc(opRef);
       if (!opSnap.exists()) {
@@ -207,11 +198,9 @@ const unsubOp = onSnapshot(opQ, (qs) => {
 
       const operationData = opSnap.data();
       const { phone, operationVal, type } = operationData;
-      // Use operation's userEmail if present, else current userEmail
       const opUserEmail = operationData.userEmail || userEmail;
       const value = Number(operationVal) || 0;
 
-      // جلب بيانات المستخدم
       const usersQuery = query(collection(db, "users"), where("email", "==", opUserEmail));
       const usersSnapshot = await getDocs(usersQuery);
 
@@ -232,78 +221,76 @@ const unsubOp = onSnapshot(opQ, (qs) => {
         }
       }
 
-      // جلب doc الخط (number) المرتبط بالعملية
-      const nq = query(
-        collection(db, "numbers"),
-        where("phone", "==", phone),
-        where("userEmail", "==", opUserEmail)
-      );
-      const nSnapshot = await getDocs(nq);
-
-      if (nSnapshot.empty) {
-        alert("⚠️ لم يتم العثور على الخط المرتبط بهذه العملية.");
-        return;
-      }
-
-      const numberDoc = nSnapshot.docs[0];
-      const numberRef = doc(db, "numbers", numberDoc.id);
-      const numberData = numberDoc.data();
-
-      // القيم الحالية
-      const oldAmount = Number(numberData.amount) || 0;
-      const oldDailyWithdraw = Number(numberData.dailyWithdraw) || 0;
-      const oldDailyDeposit = Number(numberData.dailyDeposit) || 0;
-      const oldWithdrawLimit = Number(numberData.withdrawLimit) || 0;
-      const oldDepositLimit = Number(numberData.depositLimit) || 0;
       const oldCash = Number(userData.cash) || 0;
 
-      if (type === "ارسال") {
-        // لو العملية كانت إرسال -> نرجع رصيد الخط (يزيد)
-        const newAmount = oldAmount + value;
-        const newDailyDeposit = oldDailyDeposit + value;
-        const newDepositLimit = oldDepositLimit + value;
+      if (type === "ارسال" || type === "استلام") {
+        const nq = query(
+          collection(db, "numbers"),
+          where("phone", "==", phone),
+          where("userEmail", "==", opUserEmail)
+        );
+        const nSnapshot = await getDocs(nq);
 
-        await updateDoc(numberRef, {
-          amount: newAmount,
-          dailyDeposit: newDailyDeposit,
-          depositLimit: newDepositLimit,
-        });
-
-        // الكاش يقل بدل ما يزيد عند حذف إرسال (لأن لما كانت عملية إرسال الكاش نقص)
-        const newCash = oldCash - value;
-        if (newCash < 0) {
-          alert("⚠️ لا يمكن حذف العملية لأن الكاش الناتج سيكون بالسالب.");
+        if (nSnapshot.empty) {
+          alert("⚠️ لم يتم العثور على الخط المرتبط بهذه العملية.");
           return;
         }
-        await updateDoc(userRef, { cash: newCash });
 
-      } else if (type === "استلام") {
-        // لو كانت استلام -> نخصم من رصيد الخط (لأن استلام كان زود الرصيد)
-        const newAmount = oldAmount - value;
-        if (newAmount < 0) {
-          alert("⚠️ لا يمكن حذف العملية لأن الرصيد الناتج سيكون بالسالب.");
-          return;
+        const numberDoc = nSnapshot.docs[0];
+        const numberRef = doc(db, "numbers", numberDoc.id);
+        const numberData = numberDoc.data();
+
+        const oldAmount = Number(numberData.amount) || 0;
+        const oldDailyWithdraw = Number(numberData.dailyWithdraw) || 0;
+        const oldDailyDeposit = Number(numberData.dailyDeposit) || 0;
+        const oldWithdrawLimit = Number(numberData.withdrawLimit) || 0;
+        const oldDepositLimit = Number(numberData.depositLimit) || 0;
+
+        if (type === "ارسال") {
+          const newAmount = oldAmount + value;
+          const newDailyDeposit = oldDailyDeposit + value;
+          const newDepositLimit = oldDepositLimit + value;
+
+          await updateDoc(numberRef, {
+            amount: newAmount,
+            dailyDeposit: newDailyDeposit,
+            depositLimit: newDepositLimit,
+          });
+
+          const newCash = oldCash - value;
+          if (newCash < 0) {
+            alert("⚠️ لا يمكن حذف العملية لأن الكاش الناتج سيكون بالسالب.");
+            return;
+          }
+          await updateDoc(userRef, { cash: newCash });
+
+        } else if (type === "استلام") {
+          const newAmount = oldAmount - value;
+          if (newAmount < 0) {
+            alert("⚠️ لا يمكن حذف العملية لأن الرصيد الناتج سيكون بالسالب.");
+            return;
+          }
+          const newDailyWithdraw = oldDailyWithdraw + value;
+          const newWithdrawLimit = oldWithdrawLimit + value;
+
+          await updateDoc(numberRef, {
+            amount: newAmount,
+            dailyWithdraw: newDailyWithdraw,
+            withdrawLimit: newWithdrawLimit,
+          });
+
+          await updateDoc(userRef, { cash: oldCash + value });
         }
-        const newDailyWithdraw = oldDailyWithdraw + value;
-        const newWithdrawLimit = oldWithdrawLimit + value;
-
-        await updateDoc(numberRef, {
-          amount: newAmount,
-          dailyWithdraw: newDailyWithdraw,
-          withdrawLimit: newWithdrawLimit,
-        });
-
-        // الكاش يزيد عند حذف استلام (لأن استلام كان زود الكاش سابقًا)
-        await updateDoc(userRef, { cash: oldCash + value });
-
+      } else if (type === "تعديل نقدي") {
+        await deleteDoc(opRef);
+        alert("✅ تم حذف عملية تعديل النقدي.");
+        return;
       } else {
         alert("⚠️ نوع العملية غير معروف.");
         return;
       }
 
-      // حذف العملية
       await deleteDoc(opRef);
-
       alert("✅ تم حذف العملية وإرجاع الرصيد والليميت والكاش بنجاح.");
     } catch (error) {
       console.error("❌ خطأ أثناء حذف العملية:", error);
@@ -311,7 +298,7 @@ const unsubOp = onSnapshot(opQ, (qs) => {
     }
   };
 
-  // DELETE DAY (move to reports then delete)
+  // DELETE DAY
   const handelDeleteDay = async () => {
     const confirmDelete = window.confirm("هل أنت متأكد من تقفيل اليوم؟ سيتم نقل العمليات إلى الأرشيف ومسحها من القائمة.");
     if (!confirmDelete) return;
@@ -335,7 +322,6 @@ const unsubOp = onSnapshot(opQ, (qs) => {
     }
   };
 
-
   return (
     <div className={styles.main}>
       <Wallet openWallet={openWallet} setOpenWallet={setOpenWallet} />
@@ -347,7 +333,6 @@ const unsubOp = onSnapshot(opQ, (qs) => {
            <Image src={abod} className={styles.avatar} alt="avatar" /> :
            <Image src={avatar} className={styles.avatar} alt="avatar" />
            }
-          
           <h2>مرحبا, <br /> {userName} 👋</h2>
         </div>
         <div className={styles.leftActions}>

@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 
 function CashPop({ openCash, setOpenCash }) {
   const [cashVal, setCashVal] = useState("");
+  const [notes, setNotes] = useState(""); // ✅ استيت جديدة للملاحظات
   const [userEmail, setUserEmail] = useState("");
   const [authorized, setAuthorized] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -69,16 +70,18 @@ function CashPop({ openCash, setOpenCash }) {
       // 1. تعديل قيمة النقدي عند المستخدم
       await updateDoc(userRef, { cash: Number(cashVal) });
 
-      // 2. تسجيل العملية كعملية نقدية عادية
+      // 2. تسجيل العملية كعملية نقدية عادية + الملاحظات
       await addDoc(collection(db, "operations"), {
         operationVal: Number(cashVal),
         type: "تعديل نقدي",
+        notes: notes || "", // ✅ إضافة الملاحظات
         createdAt: serverTimestamp(),
         userEmail,
       });
 
       alert("✅ تم تعديل قيمة النقدي وتسجيل العملية");
       setCashVal("");
+      setNotes(""); // ✅ تفريغ الملاحظات بعد العملية
       setOpenCash(false);
     }
   };
@@ -100,6 +103,15 @@ function CashPop({ openCash, setOpenCash }) {
               value={cashVal}
               placeholder="تعديل قيمة النقدي"
               onChange={(e) => setCashVal(e.target.value)}
+            />
+          </div>
+          <div className="inputContainer">
+            <label>لملاحظات : </label>
+            <input
+              type="text"
+              value={notes} // ✅ ربط القيمة بالـ state
+              placeholder="ملاحظات"
+              onChange={(e) => setNotes(e.target.value)}
             />
           </div>
           <button className={styles.walletBtn} onClick={handleUpdateCash}>
