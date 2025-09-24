@@ -81,28 +81,32 @@ function Reports() {
       const data = docSnap.data();
 
       let reportDateTime = null;
+      let reportDateObj = null;
+
       if (data.createdAt?.toDate) {
-        reportDateTime = data.createdAt.toDate().toLocaleString("ar-EG");
+        reportDateObj = data.createdAt.toDate();
+        reportDateTime = reportDateObj.toLocaleString("ar-EG");
       } else if (data.date) {
         const parsedDate = new Date(data.date);
         if (!isNaN(parsedDate)) {
+          reportDateObj = parsedDate;
           reportDateTime = parsedDate.toLocaleString("ar-EG");
         }
       }
 
-      if (!reportDateTime) return;
+      if (!reportDateObj) return;
 
       if (
-        (!dateFrom || new Date(reportDateTime) >= new Date(dateFrom)) &&
-        (!dateTo || new Date(reportDateTime) <= new Date(dateTo))
+        (!dateFrom || reportDateObj >= new Date(dateFrom)) &&
+        (!dateTo || reportDateObj <= new Date(dateTo + "T23:59:59"))
       ) {
         if (!phoneSearch || data.phone?.includes(phoneSearch)) {
-          allReports.push({ ...data, id: docSnap.id, reportDateTime });
+          allReports.push({ ...data, id: docSnap.id, reportDateTime, reportDateObj });
         }
       }
     });
 
-    allReports.sort((a, b) => new Date(b.reportDateTime) - new Date(a.reportDateTime));
+    allReports.sort((a, b) => b.reportDateObj - a.reportDateObj);
 
     setReports(allReports);
   };
@@ -144,102 +148,100 @@ function Reports() {
 
   // 🚀 تصدير البيانات لملف Excel (جدولين في شيت واحد)
   const handleExportExcel = async () => {
-  if (reports.length === 0) {
-    alert("⚠️ لا يوجد بيانات للتصدير");
-    return;
-  }
+    if (reports.length === 0) {
+      alert("⚠️ لا يوجد بيانات للتصدير");
+      return;
+    }
 
-  // 🔹 فلترة العمليات
-  let filteredReports = operationFilter
-    ? reports.filter((r) => r.type === operationFilter)
-    : reports;
+    // 🔹 فلترة العمليات
+    let filteredReports = operationFilter
+      ? reports.filter((r) => r.type === operationFilter)
+      : reports;
 
-  const sendReports = filteredReports.filter((r) => r.type === "ارسال");
-  const receiveReports = filteredReports.filter((r) => r.type === "استلام");
+    const sendReports = filteredReports.filter((r) => r.type === "ارسال");
+    const receiveReports = filteredReports.filter((r) => r.type === "استلام");
 
-  const sumSend = sendReports.reduce((acc, r) => acc + Number(r.commation || 0), 0);
-  const sumReceive = receiveReports.reduce((acc, r) => acc + Number(r.commation || 0), 0);
+    const sumSend = sendReports.reduce((acc, r) => acc + Number(r.commation || 0), 0);
+    const sumReceive = receiveReports.reduce((acc, r) => acc + Number(r.commation || 0), 0);
 
-  // 🔹 جلب بيانات المحافظ
-  const numbersSnap = await getDocs(query(collection(db, "numbers"), where("userEmail", "==", email)));
-  let wallets = [];
-  let totalWallets = 0;
-  numbersSnap.forEach((docSnap) => {
-    const data = docSnap.data();
-    wallets.push([data.phone || "-", data.name || "-", Number(data.amount || 0)]);
-    totalWallets += Number(data.amount || 0);
-  });
+    // 🔹 جلب بيانات المحافظ
+    const numbersSnap = await getDocs(query(collection(db, "numbers"), where("userEmail", "==", email)));
+    let wallets = [];
+    let totalWallets = 0;
+    numbersSnap.forEach((docSnap) => {
+      const data = docSnap.data();
+      wallets.push([data.phone || "-", data.name || "-", Number(data.amount || 0)]);
+      totalWallets += Number(data.amount || 0);
+    });
 
-  // 🔹 جلب النقدي
-  const usersSnap = await getDocs(query(collection(db, "users"), where("email", "==", email)));
-  let cashBalance = 0;
-  if (!usersSnap.empty) {
-    cashBalance = Number(usersSnap.docs[0].data().cash || 0);
-  }
+    // 🔹 جلب النقدي
+    const usersSnap = await getDocs(query(collection(db, "users"), where("email", "==", email)));
+    let cashBalance = 0;
+    if (!usersSnap.empty) {
+      cashBalance = Number(usersSnap.docs[0].data().cash || 0);
+    }
 
-  // 🔹 رأس المال و الأرباح
-  const capital = totalWallets + cashBalance;
-  const totalProfit = reports.reduce((acc, r) => acc + Number(r.commation || 0), 0);
+    // 🔹 رأس المال و الأرباح
+    const capital = totalWallets + cashBalance;
+    const totalProfit = reports.reduce((acc, r) => acc + Number(r.commation || 0), 0);
 
-  // 🔹 تجهيز الصفوف (aoa)
-  const sheetData = [];
+    // 🔹 تجهيز الصفوف (aoa)
+    const sheetData = [];
 
-  // جدول الاستلام
-  sheetData.push(["📌 جدول الاستلام"]);
-  sheetData.push(["الرقم", "العملية", "المبلغ", "العمولة", "الملاحظات", "التاريخ والوقت"]);
-  receiveReports.forEach((r) => {
-    sheetData.push([
-      r.phone || "-",
-      r.type || "-",
-      r.operationVal || 0,
-      r.commation || 0,
-      r.notes || "-",
-      r.reportDateTime || "-"
-    ]);
-  });
-  sheetData.push(["الإجمالي", "-", "-", sumReceive, "-", "-"]);
-  sheetData.push([]); // صف فاضي
+    // جدول الاستلام
+    sheetData.push(["📌 جدول الاستلام"]);
+    sheetData.push(["الرقم", "العملية", "المبلغ", "العمولة", "الملاحظات", "التاريخ والوقت"]);
+    receiveReports.forEach((r) => {
+      sheetData.push([
+        r.phone || "-",
+        r.type || "-",
+        r.operationVal || 0,
+        r.commation || 0,
+        r.notes || "-",
+        r.reportDateTime || "-"
+      ]);
+    });
+    sheetData.push(["الإجمالي", "-", "-", sumReceive, "-", "-"]);
+    sheetData.push([]); // صف فاضي
 
-  // جدول الإرسال
-  sheetData.push(["📌 جدول الإرسال"]);
-  sheetData.push(["الرقم", "العملية", "المبلغ", "العمولة", "الملاحظات", "التاريخ والوقت"]);
-  sendReports.forEach((r) => {
-    sheetData.push([
-      r.phone || "-",
-      r.type || "-",
-      r.operationVal || 0,
-      r.commation || 0,
-      r.notes || "-",
-      r.reportDateTime || "-"
-    ]);
-  });
-  sheetData.push(["الإجمالي", "-", "-", sumSend, "-", "-"]);
-  sheetData.push([]); // صف فاضي
+    // جدول الإرسال
+    sheetData.push(["📌 جدول الإرسال"]);
+    sheetData.push(["الرقم", "العملية", "المبلغ", "العمولة", "الملاحظات", "التاريخ والوقت"]);
+    sendReports.forEach((r) => {
+      sheetData.push([
+        r.phone || "-",
+        r.type || "-",
+        r.operationVal || 0,
+        r.commation || 0,
+        r.notes || "-",
+        r.reportDateTime || "-"
+      ]);
+    });
+    sheetData.push(["الإجمالي", "-", "-", sumSend, "-", "-"]);
+    sheetData.push([]); // صف فاضي
 
-  // تقرير المحافظ
-  sheetData.push(["📌 تقرير المحافظ"]);
-  sheetData.push(["رقم المحفظة", "اسم المحفظة", "الرصيد"]);
-  wallets.forEach((w) => sheetData.push(w));
-  sheetData.push(["إجمالي المحافظ", "-", totalWallets]);
-  sheetData.push([]); // صف فاضي
+    // تقرير المحافظ
+    sheetData.push(["📌 تقرير المحافظ"]);
+    sheetData.push(["رقم المحفظة", "اسم المحفظة", "الرصيد"]);
+    wallets.forEach((w) => sheetData.push(w));
+    sheetData.push(["إجمالي المحافظ", "-", totalWallets]);
+    sheetData.push([]); // صف فاضي
 
-  // الملخص المالي
-  sheetData.push(["📌 الملخص المالي"]);
-  sheetData.push(["إجمالي رأس المال", capital]);
-  sheetData.push(["الرصيد النقدي", cashBalance]);
-  sheetData.push(["الأرباح", totalProfit]);
+    // الملخص المالي
+    sheetData.push(["📌 الملخص المالي"]);
+    sheetData.push(["إجمالي رأس المال", capital]);
+    sheetData.push(["الرصيد النقدي", cashBalance]);
+    sheetData.push(["الأرباح", totalProfit]);
 
-  // 🔹 إنشاء الشيت
-  const workbook = XLSX.utils.book_new();
-  const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
-  XLSX.utils.book_append_sheet(workbook, worksheet, "التقارير");
+    // 🔹 إنشاء الشيت
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
+    XLSX.utils.book_append_sheet(workbook, worksheet, "التقارير");
 
-  const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-  const data = new Blob([excelBuffer], { type: "application/octet-stream" });
-  saveAs(data, `reports_${new Date().toISOString().split("T")[0]}.xlsx`);
-};
-
-
+    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+    saveAs(data, `reports_${new Date().toISOString().split("T")[0]}.xlsx`);
+  };
 
   if (loading) return <p>🔄 جاري التحقق...</p>;
   if (!authorized) return null;
