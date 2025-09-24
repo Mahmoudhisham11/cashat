@@ -143,72 +143,103 @@ function Reports() {
   };
 
   // 🚀 تصدير البيانات لملف Excel (جدولين في شيت واحد)
-  const handleExportExcel = () => {
-    if (reports.length === 0) {
-      alert("⚠️ لا يوجد بيانات للتصدير");
-      return;
-    }
+  const handleExportExcel = async () => {
+  if (reports.length === 0) {
+    alert("⚠️ لا يوجد بيانات للتصدير");
+    return;
+  }
 
-    let filteredReports = operationFilter
-      ? reports.filter((r) => r.type === operationFilter)
-      : reports;
+  // 🔹 فلترة العمليات
+  let filteredReports = operationFilter
+    ? reports.filter((r) => r.type === operationFilter)
+    : reports;
 
-    const sendReports = filteredReports.filter((r) => r.type === "ارسال");
-    const receiveReports = filteredReports.filter((r) => r.type === "استلام");
+  const sendReports = filteredReports.filter((r) => r.type === "ارسال");
+  const receiveReports = filteredReports.filter((r) => r.type === "استلام");
 
-    const sumSend = sendReports.reduce((acc, r) => acc + Number(r.commation || 0), 0);
-    const sumReceive = receiveReports.reduce((acc, r) => acc + Number(r.commation || 0), 0);
+  const sumSend = sendReports.reduce((acc, r) => acc + Number(r.commation || 0), 0);
+  const sumReceive = receiveReports.reduce((acc, r) => acc + Number(r.commation || 0), 0);
 
-    const receiveSheetData = [
-      { "---": "📌 جدول الاستلام" },
-      ...receiveReports.map((report) => ({
-        الرقم: report.phone || "-",
-        العملية: report.type || "-",
-        المبلغ: `${report.operationVal || 0} جنية`,
-        العمولة: `${report.commation || 0} جنية`,
-        الملاحظات: report.notes || "-",
-        "التاريخ والوقت": report.reportDateTime || "-",
-      })),
-      {
-        الرقم: "الإجمالي",
-        العملية: "-",
-        المبلغ: "-",
-        العمولة: `${sumReceive} جنية`,
-        الملاحظات: "-",
-        "التاريخ والوقت": "-",
-      },
-      {}, 
-    ];
+  // 🔹 جلب بيانات المحافظ
+  const numbersSnap = await getDocs(query(collection(db, "numbers"), where("userEmail", "==", email)));
+  let wallets = [];
+  let totalWallets = 0;
+  numbersSnap.forEach((docSnap) => {
+    const data = docSnap.data();
+    wallets.push([data.phone || "-", data.name || "-", Number(data.amount || 0)]);
+    totalWallets += Number(data.amount || 0);
+  });
 
-    const sendSheetData = [
-      { "---": "📌 جدول الإرسال" },
-      ...sendReports.map((report) => ({
-        الرقم: report.phone || "-",
-        العملية: report.type || "-",
-        المبلغ: `${report.operationVal || 0} جنية`,
-        العمولة: `${report.commation || 0} جنية`,
-        الملاحظات: report.notes || "-",
-        "التاريخ والوقت": report.reportDateTime || "-",
-      })),
-      {
-        الرقم: "الإجمالي",
-        العملية: "-",
-        المبلغ: "-",
-        العمولة: `${sumSend} جنية`,
-        الملاحظات: "-",
-        "التاريخ والوقت": "-",
-      },
-    ];
+  // 🔹 جلب النقدي
+  const usersSnap = await getDocs(query(collection(db, "users"), where("email", "==", email)));
+  let cashBalance = 0;
+  if (!usersSnap.empty) {
+    cashBalance = Number(usersSnap.docs[0].data().cash || 0);
+  }
 
-    const sheetData = [...receiveSheetData, ...sendSheetData];
-    const workbook = XLSX.utils.book_new();
-    const worksheet = XLSX.utils.json_to_sheet(sheetData);
-    XLSX.utils.book_append_sheet(workbook, worksheet, "التقارير");
+  // 🔹 رأس المال و الأرباح
+  const capital = totalWallets + cashBalance;
+  const totalProfit = reports.reduce((acc, r) => acc + Number(r.commation || 0), 0);
 
-    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-    const data = new Blob([excelBuffer], { type: "application/octet-stream" });
-    saveAs(data, `reports_${new Date().toISOString().split("T")[0]}.xlsx`);
-  };
+  // 🔹 تجهيز الصفوف (aoa)
+  const sheetData = [];
+
+  // جدول الاستلام
+  sheetData.push(["📌 جدول الاستلام"]);
+  sheetData.push(["الرقم", "العملية", "المبلغ", "العمولة", "الملاحظات", "التاريخ والوقت"]);
+  receiveReports.forEach((r) => {
+    sheetData.push([
+      r.phone || "-",
+      r.type || "-",
+      r.operationVal || 0,
+      r.commation || 0,
+      r.notes || "-",
+      r.reportDateTime || "-"
+    ]);
+  });
+  sheetData.push(["الإجمالي", "-", "-", sumReceive, "-", "-"]);
+  sheetData.push([]); // صف فاضي
+
+  // جدول الإرسال
+  sheetData.push(["📌 جدول الإرسال"]);
+  sheetData.push(["الرقم", "العملية", "المبلغ", "العمولة", "الملاحظات", "التاريخ والوقت"]);
+  sendReports.forEach((r) => {
+    sheetData.push([
+      r.phone || "-",
+      r.type || "-",
+      r.operationVal || 0,
+      r.commation || 0,
+      r.notes || "-",
+      r.reportDateTime || "-"
+    ]);
+  });
+  sheetData.push(["الإجمالي", "-", "-", sumSend, "-", "-"]);
+  sheetData.push([]); // صف فاضي
+
+  // تقرير المحافظ
+  sheetData.push(["📌 تقرير المحافظ"]);
+  sheetData.push(["رقم المحفظة", "اسم المحفظة", "الرصيد"]);
+  wallets.forEach((w) => sheetData.push(w));
+  sheetData.push(["إجمالي المحافظ", "-", totalWallets]);
+  sheetData.push([]); // صف فاضي
+
+  // الملخص المالي
+  sheetData.push(["📌 الملخص المالي"]);
+  sheetData.push(["إجمالي رأس المال", capital]);
+  sheetData.push(["الرصيد النقدي", cashBalance]);
+  sheetData.push(["الأرباح", totalProfit]);
+
+  // 🔹 إنشاء الشيت
+  const workbook = XLSX.utils.book_new();
+  const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
+  XLSX.utils.book_append_sheet(workbook, worksheet, "التقارير");
+
+  const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+  const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+  saveAs(data, `reports_${new Date().toISOString().split("T")[0]}.xlsx`);
+};
+
+
 
   if (loading) return <p>🔄 جاري التحقق...</p>;
   if (!authorized) return null;
